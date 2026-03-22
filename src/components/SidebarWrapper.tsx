@@ -23,7 +23,7 @@ export default function SidebarWrapper({ rol, nombre, empresaNombre }: Props) {
       />
       <style>{`
         .main-content {
-          margin-left: ${collapsed ? "64px" : "220px"};
+          marginLeft: ${collapsed ? "72px" : "220px"};
           transition: margin-left 0.2s;
         }
       `}</style>

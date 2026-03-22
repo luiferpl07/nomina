@@ -3,6 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { PrismaClient } from "@prisma/client";
 import { calcularPenalizacion } from "@/lib/penalizaciones";
+import {
+  emailRevisionAdmin,
+  emailAprobado,
+  emailRechazado,
+} from "@/lib/email";
 
 const prisma = new PrismaClient();
 
@@ -12,7 +17,8 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    if (!session)
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const { id } = await params;
     const body = await req.json();
@@ -20,15 +26,36 @@ export async function PATCH(
 
     const entregable = await prisma.entregable.findUnique({
       where: { id },
-      include: { contrato: true },
+      include: {
+        contrato: {
+          include: {
+            contratista: { select: { id: true, nombre: true, email: true } },
+            empresa: {
+              include: {
+                usuarios: {
+                  where: { rol: "ADMIN" },
+                  select: { nombre: true, email: true },
+                  take: 1,
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
-    if (!entregable) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+    if (!entregable)
+      return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
     if (session.user.rol === "CONTRATISTA" && estado !== "EN_REVISION") {
       return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
     }
 
+    // URL base para los links del email
+    const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+    const urlDetalle = `${baseUrl}/dashboard/contratos/${entregable.contratoId}`;
+
+    // ── EN_REVISION ──────────────────────────────────────────────────────────
     if (estado === "EN_REVISION") {
       await prisma.acta.upsert({
         where: { entregableId: id },
@@ -38,12 +65,30 @@ export async function PATCH(
           firmaContratista: new Date(),
         },
       });
+
+      // Notificar al admin
+      const admin = entregable.contrato.empresa.usuarios[0];
+      if (admin) {
+        await emailRevisionAdmin({
+          adminEmail: admin.email,
+          adminNombre: admin.nombre,
+          contratistaNombre: entregable.contrato.contratista.nombre,
+          entregableNombre: entregable.nombre,
+          contratoTitulo: entregable.contrato.titulo,
+          valor: entregable.valor,
+          url: urlDetalle,
+        }).catch((err) => console.error("Email admin error:", err));
+      }
     }
 
+    // ── APROBADO ─────────────────────────────────────────────────────────────
     if (estado === "APROBADO") {
       const fechaEntrega = new Date();
-      const { penalizacion, bono, diasRetraso } =
-        calcularPenalizacion(entregable.valor, entregable.fechaLimite, fechaEntrega);
+      const { penalizacion, bono, diasRetraso } = calcularPenalizacion(
+        entregable.valor,
+        entregable.fechaLimite,
+        fechaEntrega
+      );
 
       const valorFinal = entregable.valor - penalizacion + bono;
 
@@ -74,13 +119,39 @@ export async function PATCH(
           fecha: new Date(),
         },
       });
+
+      // Notificar al contratista
+      const contratista = entregable.contrato.contratista;
+      await emailAprobado({
+        contratistaNombre: contratista.nombre,
+        contratistaEmail: contratista.email,
+        entregableNombre: entregable.nombre,
+        contratoTitulo: entregable.contrato.titulo,
+        valorOriginal: entregable.valor,
+        valorFinal,
+        penalizacion,
+        bono,
+        url: urlDetalle,
+      }).catch((err) => console.error("Email aprobado error:", err));
     }
 
+    // ── RECHAZADO ─────────────────────────────────────────────────────────────
     if (estado === "RECHAZADO") {
       await prisma.acta.update({
         where: { entregableId: id },
         data: { comentario },
       });
+
+      // Notificar al contratista
+      const contratista = entregable.contrato.contratista;
+      await emailRechazado({
+        contratistaNombre: contratista.nombre,
+        contratistaEmail: contratista.email,
+        entregableNombre: entregable.nombre,
+        contratoTitulo: entregable.contrato.titulo,
+        comentario,
+        url: urlDetalle,
+      }).catch((err) => console.error("Email rechazado error:", err));
     }
 
     const actualizado = await prisma.entregable.update({
@@ -89,12 +160,8 @@ export async function PATCH(
     });
 
     return NextResponse.json(actualizado);
-
   } catch (error) {
     console.error("ERROR DETALLADO:", error);
-    return NextResponse.json(
-      { error: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

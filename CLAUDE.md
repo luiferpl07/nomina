@@ -22,6 +22,26 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - Después de cambiar schema de Prisma siempre correr npx prisma generate
 - Comandos en PowerShell: usar New-Item en vez de touch, Remove-Item en vez de rm
 
+## Notas de diseño UI (sistema visual activo)
+- Fondo general: `bg-[#f0ede8]`
+- Cards: `bg-white rounded-xl border border-black/[0.07]`
+- Card hover: `hover:border-black/[0.18] hover:-translate-y-px transition-all`
+- Footer de cards: `bg-[#fafaf7] border-t border-black/[0.05]`
+- Topbar/breadcrumb: `bg-[#f0ede8] border-b border-black/[0.07]`
+- Summary strip (métricas): flex dividido, `bg-white`, borde `border-black/[0.08]`, divide-x
+- Valores monetarios: `font-mono text-[17px] font-medium tracking-[-0.5px]`
+- Badges: `text-[11px] font-medium px-2.5 py-1 rounded-full`
+  - Verde: `bg-[#e6f5ed] text-[#1a7a4a]`
+  - Ámbar: `bg-[#fef3dc] text-[#92600a]`
+  - Rojo: `bg-[#faeaea] text-[#a02020]`
+  - Gris: `bg-black/[0.05] text-[#6b6a64]`
+- Labels de sección: `text-[11px] font-medium uppercase tracking-[0.08em] text-[#999891]`
+- Barras de progreso: `h-[3px]`, azul `#2d5be3`, verde `#1a7a4a`
+- Numeración de entregables: `font-mono text-[11px] text-[#bbb9b0]` con padStart(2,"0")
+- Botón primario: `bg-[#1a1916] text-white rounded-[8px] hover:opacity-85`
+- Inputs: `border border-black/[0.12] rounded-[8px]` focus `border-[#2d5be3] ring-2 ring-[#2d5be3]/10`
+- Sin max-width en páginas internas — el contenido ocupa todo el área disponible con `p-8`
+
 ## Roles del sistema
 - ADMIN: crea contratos, ve todo, configura penalizaciones, aprueba entregables
 - APROBADOR: revisa entregables, firma actas, libera pagos
@@ -57,14 +77,13 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - ✅ Rediseño UI con shadcn/ui — estilo Linear/Notion
 - ✅ Sidebar colapsable con layout flotante
 
-### FASE 1.5 — UI/UX completo 🔄 EN PROGRESO
+### FASE 1.5 — UI/UX completo ✅ COMPLETA
 - ✅ Dashboard admin rediseñado con shadcn
 - ✅ Sidebar colapsable funcionando
-- ⏳ Aplicar diseño a página de contratos
-- ⏳ Aplicar diseño a detalle del contrato
-- ⏳ Aplicar diseño a portal del contratista
-- ⏳ Aplicar diseño a página de login
-- ⏳ Página de login mejorada
+- ✅ Aplicar diseño a página de contratos → src/app/dashboard/contratos/page.tsx
+- ✅ Aplicar diseño a detalle del contrato → src/app/dashboard/contratos/[id]/page.tsx
+- ✅ Aplicar diseño a portal del contratista → src/app/portal/page.tsx
+- ✅ Página de login mejorada con ojito toggle → src/app/login/page.tsx
 
 ### FASE 2 — Nómina inteligente
 - ⏳ Notificaciones por email con Resend
@@ -112,20 +131,22 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 ---
 
 ## Módulo en progreso
-UI/UX — aplicar diseño a todas las pantallas
+Fase 2 — Nómina inteligente
 
 ## Próximo paso exacto
-1. Arreglar sidebar colapsable (usar SidebarWrapper)
-2. Aplicar diseño shadcn a src/app/dashboard/contratos/page.tsx
-3. Aplicar diseño shadcn a src/app/dashboard/contratos/[id]/page.tsx
-4. Aplicar diseño shadcn a src/app/portal/page.tsx
-5. Mejorar página de login
+1. Configurar Resend: crear src/lib/email.ts con templates
+2. Conectar emails al flujo de aprobación/rechazo en la API de entregables
+3. Página de configuración de penalizaciones (UI para editar reglas sin deploy)
+4. Retención en la fuente automática con tabla DIAN
 
 ## Última sesión
-21 Mar 2026 — Rediseño completo del dashboard con shadcn/ui.
-Sidebar colapsable estilo Linear con fondo stone-200 exterior
-y panel blanco redondeado. Acta PDF con diseño profesional.
-Penalizaciones y bonos automáticos funcionando.
+21 Mar 2026 — Fase 1.5 UI/UX completa.
+Rediseño de contratos/page.tsx, contratos/[id]/page.tsx,
+portal/page.tsx y login/page.tsx con sistema visual consistente:
+fondo #f0ede8, cards blancas con border black/7, summary strips,
+barras de progreso de 3px, badges de colores semánticos,
+valores en font-mono, sin max-width (p-8 full width).
+Login con toggle de contraseña (ojito SVG).
 
 ## Tablas que necesita la BD
 - Usuario (id, nombre, email, rol, empresaId)

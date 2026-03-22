@@ -70,55 +70,33 @@ export default function Sidebar({ rol, nombre, empresaNombre, collapsed, onToggl
       className="bg-white rounded-2xl flex flex-col overflow-hidden transition-all duration-200 flex-shrink-0"
     >
       {/* Header */}
-      <div className={`flex items-center h-16 px-4 border-b border-stone-100 ${collapsed ? "justify-center" : "justify-between"}`}>
-        {!collapsed && (
-          <div className="flex items-center gap-3 min-w-0">
+        <div className={`flex flex-col border-b border-stone-100 ${collapsed ? "items-center py-4 gap-3" : "flex-row items-center h-16 px-4 justify-between"}`}>
+        <div className={`flex items-center gap-3 min-w-0 ${collapsed ? "" : "flex-1"}`}>
             <div className="w-9 h-9 rounded-full bg-stone-900 flex items-center justify-center flex-shrink-0">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8h10M8 3v10" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-stone-900 truncate leading-tight">NóminaFlow</p>
-              {empresaNombre && (
-                <p className="text-xs text-stone-400 truncate leading-tight">{empresaNombre}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {collapsed && (
-          <div className="w-9 h-9 rounded-full bg-stone-900 flex items-center justify-center">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M8 3v10" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M3 8h10M8 3v10" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
-          </div>
-        )}
+            </div>
+            {!collapsed && (
+            <div className="min-w-0">
+                <p className="text-sm font-semibold text-stone-900 truncate leading-tight">NóminaFlow</p>
+                {empresaNombre && (
+                <p className="text-xs text-stone-400 truncate leading-tight">{empresaNombre}</p>
+                )}
+            </div>
+            )}
+        </div>
 
-        {/* Botón colapsar — ícono como la imagen de referencia */}
-        {!collapsed && (
-          <button
+        <button
             onClick={onToggle}
             className="p-1.5 rounded-md text-stone-300 hover:text-stone-600 hover:bg-stone-50 transition-colors flex-shrink-0"
-          >
+        >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <rect x="1" y="1" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="1.3"/>
-              <path d="M6 1v16" stroke="currentColor" strokeWidth="1.3"/>
+            <rect x="1" y="1" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="1.3"/>
+            <path d="M6 1v16" stroke="currentColor" strokeWidth="1.3"/>
             </svg>
-          </button>
-        )}
-
-        {collapsed && (
-          <button
-            onClick={onToggle}
-            className="absolute -right-3 top-6 w-5 h-5 bg-white border border-stone-200 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-700 shadow-sm"
-          >
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-              <path d="M2 1.5l3 2.5-3 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        )}
-      </div>
+        </button>
+        </div>
 
       {/* Nav */}
       <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden">
