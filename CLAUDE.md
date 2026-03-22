@@ -35,19 +35,22 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - ✅ Autenticación con NextAuth.js (JWT + roles)
 - ✅ Página de login creada
 - ✅ Tipos de sesión personalizados (id, rol, nombre, empresaId)
+- ✅ Middleware de protección de rutas por rol
+- ✅ Dashboard admin y portal contratista básicos
+- ✅ Usuarios de prueba (admin@demo.com / juan@demo.com)
 
 ## Módulo en progreso
-- Dashboard principal por rol
+- CRUD de contratos
 
 ## Próximo paso exacto
-1. Crear src/app/dashboard/page.tsx
-2. Proteger la ruta con middleware
-3. Redirigir según el rol del usuario
+1. Crear src/app/api/contratos/route.ts (GET y POST)
+2. Crear src/app/dashboard/contratos/page.tsx
+3. Crear formulario para nuevo contrato con sus entregables
 
 ## Última sesión
-21 Mar 2026 — Autenticación completa con NextAuth.js.
-Login funciona con email y contraseña. JWT guarda rol,
-nombre y empresaId. TypeScript sin errores.
+21 Mar 2026 — Login funcionando. Admin entra al dashboard,
+contratista entra al portal. Middleware redirige según rol.
+Usuarios de prueba creados con seed.
 
 ## Tablas que necesita la BD
 - Usuario (id, nombre, email, rol, empresaId)
