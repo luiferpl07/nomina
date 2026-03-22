@@ -32,7 +32,9 @@ export default function AccionesEntregable({
     });
 
     if (!res.ok) {
-        console.error("Error al cambiar estado");
+        const error = await res.json();
+        console.error("Error:", error);
+        alert(`Error: ${JSON.stringify(error)}`);
         setCargando(false);
         return;
     }

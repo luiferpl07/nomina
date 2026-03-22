@@ -38,25 +38,30 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - ✅ Página de login creada
 - ✅ Tipos de sesión personalizados (id, rol, nombre, empresaId)
 - ✅ Middleware de protección de rutas por rol
-- ✅ Dashboard admin y portal contratista básicos
+- ✅ Dashboard admin y portal contratista con datos reales
 - ✅ Usuarios de prueba (admin@demo.com / juan@demo.com)
 - ✅ Cerrar sesión y navegación por roles
 - ✅ API de contratos (GET y POST)
 - ✅ Formulario de nuevo contrato con entregables
-- ✅ Validación: suma de entregables debe ser igual al valor total
+- ✅ Validación: suma de entregables igual al valor total
+- ✅ Detalle del contrato con progreso
+- ✅ Flujo completo: enviar a revisión → aprobar/rechazar → pago registrado
+- ✅ Generación de acta PDF profesional con firma doble
 
 ## Módulo en progreso
-- Flujo de aprobación de entregables
+- Penalizaciones y bonificaciones automáticas
 
 ## Próximo paso exacto
-1. Crear src/app/api/entregables/[id]/route.ts (PATCH para cambiar estado)
-2. Crear src/app/dashboard/contratos/[id]/page.tsx (detalle del contrato)
-3. Permitir subir evidencia y cambiar estado a EN_REVISION
+1. Crear src/app/api/penalizaciones/route.ts
+2. Agregar campo penalizacion en modelo Entregable
+3. Calcular automáticamente al aprobar según días de retraso
 
 ## Última sesión
-21 Mar 2026 — CRUD de contratos funcionando. Formulario
-con validación de suma de entregables. Contrato de prueba
-creado con Juan Pérez por $10.000.000.
+21 Mar 2026 — PDF del acta generado con diseño profesional.
+Flujo completo funcionando: contratista entrega, admin aprueba,
+acta PDF descargable con firmas digitales de ambas partes.
+
+
 ## Tablas que necesita la BD
 - Usuario (id, nombre, email, rol, empresaId)
 - Empresa (id, nombre, nit)

@@ -35,7 +35,7 @@ export default async function DetalleContratoPage({
 
   const pagado = contrato.entregables
     .filter((e) => e.estado === "APROBADO")
-    .reduce((sum, e) => sum + e.valor, 0);
+    .reduce((sum, e) => sum + (e.pago?.valor ?? e.valor), 0);
 
   const progreso = Math.round((pagado / contrato.valorTotal) * 100) || 0;
 
@@ -138,35 +138,61 @@ export default async function DetalleContratoPage({
                   >
                     {estadoLabel[e.estado]}
                   </span>
-                  <p className="text-sm font-medium text-gray-900">
-                    ${e.valor.toLocaleString()}
-                  </p>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">
+                      ${e.valor.toLocaleString()}
+                    </p>
+                    {e.penalizacion !== 0 && (
+                        <p
+                            className={`text-xs font-medium ${
+                            e.penalizacion < 0
+                                ? "text-red-600"
+                                : "text-green-600"
+                            }`}
+                        >
+                            {e.penalizacion < 0
+                            ? `-$${Math.abs(e.penalizacion ?? 0).toLocaleString()} penalización`
+                            : `+$${(e.penalizacion ?? 0).toLocaleString()} bono`}
+                        </p>
+                        )}
+                        {e.diasRetraso > 0 && (
+                        <p className="text-xs text-red-400">
+                            {e.diasRetraso} días tarde
+                        </p>
+                        )}
+                                        
+                  </div>
                 </div>
               </div>
 
-            <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-400">
-                Vence: {new Date(e.fechaLimite).toLocaleDateString("es-CO")}
-            </p>
-            <div className="flex items-center gap-4">
-                {e.estado === "APROBADO" && e.acta && (
-                <a
-                    href={`/api/actas/${e.acta.id}/pdf`}
-                    target="_blank"
-                    className="text-xs text-blue-600 hover:text-blue-800 underline"
-                >
-                    Descargar acta PDF
-                </a>
-                )}
-                <AccionesEntregable
-                entregableId={e.id}
-                estado={e.estado}
-                rol={session.user.rol}
-                firmaContratista={e.acta?.firmaContratista?.toISOString() ?? null}
-                firmaAprobador={e.acta?.firmaAprobador?.toISOString() ?? null}
-                />
-            </div>
-            </div>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-400">
+                  Vence:{" "}
+                  {new Date(e.fechaLimite).toLocaleDateString("es-CO")}
+                </p>
+                <div className="flex items-center gap-4">
+                  {e.estado === "APROBADO" && e.acta && (
+                    <a
+                      href={`/api/actas/${e.acta.id}/pdf`}
+                      target="_blank"
+                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Descargar acta PDF
+                    </a>
+                  )}
+                  <AccionesEntregable
+                    entregableId={e.id}
+                    estado={e.estado}
+                    rol={session.user.rol}
+                    firmaContratista={
+                      e.acta?.firmaContratista?.toISOString() ?? null
+                    }
+                    firmaAprobador={
+                      e.acta?.firmaAprobador?.toISOString() ?? null
+                    }
+                  />
+                </div>
+              </div>
             </div>
           ))}
         </div>

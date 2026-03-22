@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { PrismaClient } from "@prisma/client";
+import { calcularPenalizacion } from "@/lib/penalizaciones";
 
 const prisma = new PrismaClient();
 
@@ -9,61 +10,91 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const { id } = await params;
-  const body = await req.json();
-  const { estado, comentario } = body;
+    const { id } = await params;
+    const body = await req.json();
+    const { estado, comentario } = body;
 
-  const entregable = await prisma.entregable.findUnique({
-    where: { id },
-    include: { contrato: true },
-  });
-
-  if (!entregable) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
-
-  if (session.user.rol === "CONTRATISTA" && estado !== "EN_REVISION") {
-    return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-  }
-
-  if (estado === "EN_REVISION") {
-    await prisma.acta.upsert({
-      where: { entregableId: id },
-      update: { firmaContratista: new Date() },
-      create: {
-        entregableId: id,
-        firmaContratista: new Date(),
-      },
-    });
-  }
-
-  if (estado === "APROBADO") {
-    await prisma.acta.update({
-      where: { entregableId: id },
-      data: {
-        firmaAprobador: new Date(),
-        aprobadorId: session.user.id,
-        comentario,
-      },
+    const entregable = await prisma.entregable.findUnique({
+      where: { id },
+      include: { contrato: true },
     });
 
-    await prisma.pago.upsert({
-      where: { entregableId: id },
-      update: { estado: "PAGADO", fecha: new Date() },
-      create: {
-        entregableId: id,
-        valor: entregable.valor,
-        estado: "PAGADO",
-        fecha: new Date(),
-      },
+    if (!entregable) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+
+    if (session.user.rol === "CONTRATISTA" && estado !== "EN_REVISION") {
+      return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+    }
+
+    if (estado === "EN_REVISION") {
+      await prisma.acta.upsert({
+        where: { entregableId: id },
+        update: { firmaContratista: new Date() },
+        create: {
+          entregableId: id,
+          firmaContratista: new Date(),
+        },
+      });
+    }
+
+    if (estado === "APROBADO") {
+      const fechaEntrega = new Date();
+      const { penalizacion, bono, diasRetraso } =
+        calcularPenalizacion(entregable.valor, entregable.fechaLimite, fechaEntrega);
+
+      const valorFinal = entregable.valor - penalizacion + bono;
+
+      await prisma.entregable.update({
+        where: { id },
+        data: {
+          penalizacion: penalizacion > 0 ? -penalizacion : bono,
+          diasRetraso,
+        },
+      });
+
+      await prisma.acta.update({
+        where: { entregableId: id },
+        data: {
+          firmaAprobador: new Date(),
+          aprobadorId: session.user.id,
+          comentario,
+        },
+      });
+
+      await prisma.pago.upsert({
+        where: { entregableId: id },
+        update: { estado: "PAGADO", fecha: new Date(), valor: valorFinal },
+        create: {
+          entregableId: id,
+          valor: valorFinal,
+          estado: "PAGADO",
+          fecha: new Date(),
+        },
+      });
+    }
+
+    if (estado === "RECHAZADO") {
+      await prisma.acta.update({
+        where: { entregableId: id },
+        data: { comentario },
+      });
+    }
+
+    const actualizado = await prisma.entregable.update({
+      where: { id },
+      data: { estado },
     });
+
+    return NextResponse.json(actualizado);
+
+  } catch (error) {
+    console.error("ERROR DETALLADO:", error);
+    return NextResponse.json(
+      { error: String(error) },
+      { status: 500 }
+    );
   }
-
-  const actualizado = await prisma.entregable.update({
-    where: { id },
-    data: { estado },
-  });
-
-  return NextResponse.json(actualizado);
 }

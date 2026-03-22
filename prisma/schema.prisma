@@ -71,6 +71,8 @@ model Entregable {
   valor       Int
   fechaLimite DateTime
   estado      EstadoEntregable @default(PENDIENTE)
+  penalizacion Int             @default(0)
+  diasRetraso  Int             @default(0)
   contratoId  String
   contrato    Contrato         @relation(fields: [contratoId], references: [id])
   createdAt   DateTime         @default(now())
@@ -112,3 +114,4 @@ model Pago {
   fecha         DateTime?
   createdAt     DateTime   @default(now())
 }
+
