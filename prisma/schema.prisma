@@ -27,24 +27,39 @@ enum EstadoPago {
 }
 
 model Empresa {
-  id                  String               @id @default(cuid())
-  nombre              String
-  nit                 String               @unique
-  createdAt           DateTime             @default(now())
-  usuarios            Usuario[]
-  contratos           Contrato[]
-  configPenalizacion  ConfigPenalizacion?
+  id                 String              @id @default(cuid())
+  nombre             String
+  nit                String              @unique
+  createdAt          DateTime            @default(now())
+  usuarios           Usuario[]
+  contratos          Contrato[]
+  configPenalizacion ConfigPenalizacion?
+  tarifasRetencion   TarifaRetencion[]
 }
 
 model ConfigPenalizacion {
-  id                String   @id @default(cuid())
-  empresaId         String   @unique
-  empresa           Empresa  @relation(fields: [empresaId], references: [id])
-  porcentajePorDia  Int      @default(2)   // % de penalización por día de retraso
-  topeMaximo        Int      @default(20)  // % máximo de penalización
-  bonoPorDia        Int      @default(1)   // % de bono por día anticipado
-  topeBonoMaximo    Int      @default(10)  // % máximo de bono
-  updatedAt         DateTime @updatedAt
+  id               String   @id @default(cuid())
+  empresaId        String   @unique
+  empresa          Empresa  @relation(fields: [empresaId], references: [id])
+  porcentajePorDia Int      @default(2)
+  topeMaximo       Int      @default(20)
+  bonoPorDia       Int      @default(1)
+  topeBonoMaximo   Int      @default(10)
+  updatedAt        DateTime @updatedAt
+}
+
+// Tarifas de retención en la fuente (honorarios) — configurables por empresa
+model TarifaRetencion {
+  id          String   @id @default(cuid())
+  empresaId   String
+  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+  desde       Int      // valor mínimo del contrato en pesos
+  hasta       Int?     // null = sin límite superior
+  porcentaje  Int      // % de retención
+  orden       Int      // para ordenar los rangos de menor a mayor
+  createdAt   DateTime @default(now())
+
+  @@index([empresaId, orden])
 }
 
 model Usuario {
@@ -62,18 +77,19 @@ model Usuario {
 }
 
 model Contrato {
-  id            String       @id @default(cuid())
-  titulo        String
-  descripcion   String?
-  valorTotal    Int
-  fechaInicio   DateTime
-  fechaFin      DateTime
-  empresaId     String
-  empresa       Empresa      @relation(fields: [empresaId], references: [id])
-  contratistaId String
-  contratista   Usuario      @relation("Contratista", fields: [contratistaId], references: [id])
-  createdAt     DateTime     @default(now())
-  entregables   Entregable[]
+  id                  String       @id @default(cuid())
+  titulo              String
+  descripcion         String?
+  valorTotal          Int
+  fechaInicio         DateTime
+  fechaFin            DateTime
+  empresaId           String
+  empresa             Empresa      @relation(fields: [empresaId], references: [id])
+  contratistaId       String
+  contratista         Usuario      @relation("Contratista", fields: [contratistaId], references: [id])
+  retencionPorcentaje Int          @default(0) // % calculado al crear según valorTotal
+  createdAt           DateTime     @default(now())
+  entregables         Entregable[]
 }
 
 model Entregable {
@@ -121,7 +137,9 @@ model Pago {
   id           String     @id @default(cuid())
   entregableId String     @unique
   entregable   Entregable @relation(fields: [entregableId], references: [id])
-  valor        Int
+  valor        Int        // valor base después de penalización/bono
+  retencion    Int        @default(0) // monto descontado por retención
+  valorNeto    Int        @default(0) // lo que recibe el contratista
   estado       EstadoPago @default(PENDIENTE)
   fecha        DateTime?
   createdAt    DateTime   @default(now())

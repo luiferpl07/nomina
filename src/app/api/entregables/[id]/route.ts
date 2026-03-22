@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { PrismaClient } from "@prisma/client";
 import { calcularPenalizacion } from "@/lib/penalizaciones";
+import { calcularMontoRetencion } from "@/lib/retencion";
 import {
   emailRevisionAdmin,
   emailAprobado,
@@ -47,11 +48,9 @@ export async function PATCH(
     if (!entregable)
       return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
-    if (session.user.rol === "CONTRATISTA" && estado !== "EN_REVISION") {
+    if (session.user.rol === "CONTRATISTA" && estado !== "EN_REVISION")
       return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
-    }
 
-    // URL base para los links del email
     const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     const urlDetalle = `${baseUrl}/dashboard/contratos/${entregable.contratoId}`;
 
@@ -60,13 +59,9 @@ export async function PATCH(
       await prisma.acta.upsert({
         where: { entregableId: id },
         update: { firmaContratista: new Date() },
-        create: {
-          entregableId: id,
-          firmaContratista: new Date(),
-        },
+        create: { entregableId: id, firmaContratista: new Date() },
       });
 
-      // Notificar al admin
       const admin = entregable.contrato.empresa.usuarios[0];
       if (admin) {
         await emailRevisionAdmin({
@@ -90,7 +85,10 @@ export async function PATCH(
         fechaEntrega
       );
 
-      const valorFinal = entregable.valor - penalizacion + bono;
+      const valorConPenalizacion = entregable.valor - penalizacion + bono;
+      const retencionPorcentaje = entregable.contrato.retencionPorcentaje;
+      const retencion = calcularMontoRetencion(valorConPenalizacion, retencionPorcentaje);
+      const valorNeto = valorConPenalizacion - retencion;
 
       await prisma.entregable.update({
         where: { id },
@@ -111,16 +109,23 @@ export async function PATCH(
 
       await prisma.pago.upsert({
         where: { entregableId: id },
-        update: { estado: "PAGADO", fecha: new Date(), valor: valorFinal },
+        update: {
+          estado: "PAGADO",
+          fecha: new Date(),
+          valor: valorConPenalizacion,
+          retencion,
+          valorNeto,
+        },
         create: {
           entregableId: id,
-          valor: valorFinal,
+          valor: valorConPenalizacion,
+          retencion,
+          valorNeto,
           estado: "PAGADO",
           fecha: new Date(),
         },
       });
 
-      // Notificar al contratista
       const contratista = entregable.contrato.contratista;
       await emailAprobado({
         contratistaNombre: contratista.nombre,
@@ -128,9 +133,11 @@ export async function PATCH(
         entregableNombre: entregable.nombre,
         contratoTitulo: entregable.contrato.titulo,
         valorOriginal: entregable.valor,
-        valorFinal,
+        valorFinal: valorNeto,
         penalizacion,
         bono,
+        retencion,
+        retencionPorcentaje,
         url: urlDetalle,
       }).catch((err) => console.error("Email aprobado error:", err));
     }
@@ -142,7 +149,6 @@ export async function PATCH(
         data: { comentario },
       });
 
-      // Notificar al contratista
       const contratista = entregable.contrato.contratista;
       await emailRechazado({
         contratistaNombre: contratista.nombre,
