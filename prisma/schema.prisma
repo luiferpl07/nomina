@@ -27,91 +27,102 @@ enum EstadoPago {
 }
 
 model Empresa {
-  id         String     @id @default(cuid())
-  nombre     String
-  nit        String     @unique
-  createdAt  DateTime   @default(now())
-  usuarios   Usuario[]
-  contratos  Contrato[]
+  id                  String               @id @default(cuid())
+  nombre              String
+  nit                 String               @unique
+  createdAt           DateTime             @default(now())
+  usuarios            Usuario[]
+  contratos           Contrato[]
+  configPenalizacion  ConfigPenalizacion?
+}
+
+model ConfigPenalizacion {
+  id                String   @id @default(cuid())
+  empresaId         String   @unique
+  empresa           Empresa  @relation(fields: [empresaId], references: [id])
+  porcentajePorDia  Int      @default(2)   // % de penalización por día de retraso
+  topeMaximo        Int      @default(20)  // % máximo de penalización
+  bonoPorDia        Int      @default(1)   // % de bono por día anticipado
+  topeBonoMaximo    Int      @default(10)  // % máximo de bono
+  updatedAt         DateTime @updatedAt
 }
 
 model Usuario {
-  id          String     @id @default(cuid())
-  nombre      String
-  email       String     @unique
-  password    String
-  rol         Rol
-  empresaId   String
-  empresa     Empresa    @relation(fields: [empresaId], references: [id])
-  createdAt   DateTime   @default(now())
-  contratos   Contrato[] @relation("Contratista")
-  evidencias  Evidencia[]
-  actasFirmadas Acta[]   @relation("Aprobador")
+  id            String      @id @default(cuid())
+  nombre        String
+  email         String      @unique
+  password      String
+  rol           Rol
+  empresaId     String
+  empresa       Empresa     @relation(fields: [empresaId], references: [id])
+  createdAt     DateTime    @default(now())
+  contratos     Contrato[]  @relation("Contratista")
+  evidencias    Evidencia[]
+  actasFirmadas Acta[]      @relation("Aprobador")
 }
 
 model Contrato {
-  id             String       @id @default(cuid())
-  titulo         String
-  descripcion    String?
-  valorTotal     Int
-  fechaInicio    DateTime
-  fechaFin       DateTime
-  empresaId      String
-  empresa        Empresa      @relation(fields: [empresaId], references: [id])
-  contratistaId  String
-  contratista    Usuario      @relation("Contratista", fields: [contratistaId], references: [id])
-  createdAt      DateTime     @default(now())
-  entregables    Entregable[]
+  id            String       @id @default(cuid())
+  titulo        String
+  descripcion   String?
+  valorTotal    Int
+  fechaInicio   DateTime
+  fechaFin      DateTime
+  empresaId     String
+  empresa       Empresa      @relation(fields: [empresaId], references: [id])
+  contratistaId String
+  contratista   Usuario      @relation("Contratista", fields: [contratistaId], references: [id])
+  createdAt     DateTime     @default(now())
+  entregables   Entregable[]
 }
 
 model Entregable {
-  id          String           @id @default(cuid())
-  nombre      String
-  descripcion String?
-  valor       Int
-  fechaLimite DateTime
-  estado      EstadoEntregable @default(PENDIENTE)
-  penalizacion Int             @default(0)
-  diasRetraso  Int             @default(0)
-  contratoId  String
-  contrato    Contrato         @relation(fields: [contratoId], references: [id])
-  createdAt   DateTime         @default(now())
-  evidencias  Evidencia[]
-  acta        Acta?
-  pago        Pago?
+  id           String           @id @default(cuid())
+  nombre       String
+  descripcion  String?
+  valor        Int
+  fechaLimite  DateTime
+  estado       EstadoEntregable @default(PENDIENTE)
+  penalizacion Int              @default(0)
+  diasRetraso  Int              @default(0)
+  contratoId   String
+  contrato     Contrato         @relation(fields: [contratoId], references: [id])
+  createdAt    DateTime         @default(now())
+  evidencias   Evidencia[]
+  acta         Acta?
+  pago         Pago?
 }
 
 model Evidencia {
-  id            String     @id @default(cuid())
-  nombre        String
-  url           String
-  entregableId  String
-  entregable    Entregable @relation(fields: [entregableId], references: [id])
-  subidoPorId   String
-  subidoPor     Usuario    @relation(fields: [subidoPorId], references: [id])
-  createdAt     DateTime   @default(now())
+  id           String     @id @default(cuid())
+  nombre       String
+  url          String
+  entregableId String
+  entregable   Entregable @relation(fields: [entregableId], references: [id])
+  subidoPorId  String
+  subidoPor    Usuario    @relation(fields: [subidoPorId], references: [id])
+  createdAt    DateTime   @default(now())
 }
 
 model Acta {
-  id                  String     @id @default(cuid())
-  entregableId        String     @unique
-  entregable          Entregable @relation(fields: [entregableId], references: [id])
-  firmaContratista    DateTime?
-  firmaAprobador      DateTime?
-  aprobadorId         String?
-  aprobador           Usuario?   @relation("Aprobador", fields: [aprobadorId], references: [id])
-  pdfUrl              String?
-  comentario          String?
-  createdAt           DateTime   @default(now())
+  id               String     @id @default(cuid())
+  entregableId     String     @unique
+  entregable       Entregable @relation(fields: [entregableId], references: [id])
+  firmaContratista DateTime?
+  firmaAprobador   DateTime?
+  aprobadorId      String?
+  aprobador        Usuario?   @relation("Aprobador", fields: [aprobadorId], references: [id])
+  pdfUrl           String?
+  comentario       String?
+  createdAt        DateTime   @default(now())
 }
 
 model Pago {
-  id            String     @id @default(cuid())
-  entregableId  String     @unique
-  entregable    Entregable @relation(fields: [entregableId], references: [id])
-  valor         Int
-  estado        EstadoPago @default(PENDIENTE)
-  fecha         DateTime?
-  createdAt     DateTime   @default(now())
+  id           String     @id @default(cuid())
+  entregableId String     @unique
+  entregable   Entregable @relation(fields: [entregableId], references: [id])
+  valor        Int
+  estado       EstadoPago @default(PENDIENTE)
+  fecha        DateTime?
+  createdAt    DateTime   @default(now())
 }
-

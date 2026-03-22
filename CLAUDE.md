@@ -13,7 +13,7 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - Base de datos: PostgreSQL + Prisma ORM
 - Autenticación: NextAuth.js (roles: ADMIN, APROBADOR, CONTRATISTA)
 - Archivos/PDFs: pdf-lib
-- Emails: Resend (instalado, no configurado aún)
+- Emails: Resend ✅ configurado en src/lib/email.ts
 - Deploy: Railway (pendiente)
 - UI Components: shadcn/ui con Radix
 
@@ -21,6 +21,12 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - Los params son siempre Promise — usar await params en todas las rutas dinámicas
 - Después de cambiar schema de Prisma siempre correr npx prisma generate
 - Comandos en PowerShell: usar New-Item en vez de touch, Remove-Item en vez de rm
+
+## Variables de entorno necesarias
+- DATABASE_URL
+- NEXTAUTH_SECRET
+- NEXTAUTH_URL
+- RESEND_API_KEY → obtener en resend.com
 
 ## Notas de diseño UI (sistema visual activo)
 - Fondo general: `bg-[#f0ede8]`
@@ -85,11 +91,12 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - ✅ Aplicar diseño a portal del contratista → src/app/portal/page.tsx
 - ✅ Página de login mejorada con ojito toggle → src/app/login/page.tsx
 
-### FASE 2 — Nómina inteligente
-- ⏳ Notificaciones por email con Resend
-  - Email al contratista cuando entregable es aprobado/rechazado
-  - Email al admin cuando contratista envía a revisión
-  - Recordatorio cuando se acerca fecha límite
+### FASE 2 — Nómina inteligente 🔄 EN PROGRESO
+- ✅ Notificaciones por email con Resend
+  - ✅ Email al contratista cuando entregable es aprobado
+  - ✅ Email al contratista cuando entregable es rechazado (con comentario)
+  - ✅ Email al admin cuando contratista envía a revisión
+  - ⏳ Recordatorio cuando se acerca fecha límite
 - ⏳ Integración DIAN nómina electrónica
   - Generación de XML según estándar DIAN
   - Transmisión y acuse de recibo
@@ -134,19 +141,18 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 Fase 2 — Nómina inteligente
 
 ## Próximo paso exacto
-1. Configurar Resend: crear src/lib/email.ts con templates
-2. Conectar emails al flujo de aprobación/rechazo en la API de entregables
-3. Página de configuración de penalizaciones (UI para editar reglas sin deploy)
-4. Retención en la fuente automática con tabla DIAN
+1. Recordatorio automático por email cuando se acerca fecha límite de entregable
+2. Página de configuración de penalizaciones (UI para editar reglas sin deploy)
+3. Retención en la fuente automática con tabla DIAN
 
 ## Última sesión
-21 Mar 2026 — Fase 1.5 UI/UX completa.
+21 Mar 2026 — Fase 1.5 UI/UX completa + inicio Fase 2.
 Rediseño de contratos/page.tsx, contratos/[id]/page.tsx,
-portal/page.tsx y login/page.tsx con sistema visual consistente:
-fondo #f0ede8, cards blancas con border black/7, summary strips,
-barras de progreso de 3px, badges de colores semánticos,
-valores en font-mono, sin max-width (p-8 full width).
-Login con toggle de contraseña (ojito SVG).
+portal/page.tsx y login/page.tsx con sistema visual consistente.
+Emails con Resend: src/lib/email.ts con 3 templates HTML
+(revisión admin, aprobado contratista, rechazado contratista).
+Route src/app/api/entregables/[id]/route.ts actualizado con envíos.
+Requiere RESEND_API_KEY en .env y npm install resend.
 
 ## Tablas que necesita la BD
 - Usuario (id, nombre, email, rol, empresaId)
