@@ -7,7 +7,7 @@ El pago se libera solo cuando el entregable es aprobado con
 firma digital doble (contratista + aprobador) y evidencia adjunta.
 
 ## Stack
-- Framework: Next.js 14 con App Router
+- Framework: Next.js 16 con App Router
 - Lenguaje: TypeScript
 - Estilos: Tailwind CSS
 - Base de datos: PostgreSQL + Prisma ORM
@@ -15,6 +15,8 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - Archivos/PDFs: Cloudflare R2 + pdf-lib
 - Emails: Resend
 - Deploy: Railway
+- Nota importante: en Next.js 16 los params son siempre una Promise,
+  usar await params en todas las rutas dinámicas
 
 ## Decisiones importantes
 - Valores monetarios en pesos enteros (sin decimales) en la BD
@@ -28,7 +30,7 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - contratista: ve sus contratos, sube evidencia, firma entregas
 
 ## Módulos completados
-- ✅ Proyecto creado con Next.js 14 + TypeScript + Tailwind
+- ✅ Proyecto creado con Next.js 16 + TypeScript + Tailwind
 - ✅ Estructura de carpetas y documentación inicial
 - ✅ Dependencias instaladas (prisma, next-auth, pdf-lib, resend)
 - ✅ Schema de base de datos creado y aplicado en PostgreSQL
