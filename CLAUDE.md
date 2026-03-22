@@ -27,8 +27,8 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - aprobador: revisa entregables, firma actas, libera pagos
 - contratista: ve sus contratos, sube evidencia, firma entregas
 
-### Módulos completados
-- ✅ Proyecto creado con Next.js 16 + TypeScript + Tailwind
+## Módulos completados
+- ✅ Proyecto creado con Next.js 14 + TypeScript + Tailwind
 - ✅ Estructura de carpetas y documentación inicial
 - ✅ Dependencias instaladas (prisma, next-auth, pdf-lib, resend)
 - ✅ Schema de base de datos creado y aplicado en PostgreSQL
@@ -38,21 +38,23 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - ✅ Middleware de protección de rutas por rol
 - ✅ Dashboard admin y portal contratista básicos
 - ✅ Usuarios de prueba (admin@demo.com / juan@demo.com)
-- ✅ Cerrar sesión y navegación correcta por rol
+- ✅ Cerrar sesión y navegación por roles
+- ✅ API de contratos (GET y POST)
+- ✅ Formulario de nuevo contrato con entregables
+- ✅ Validación: suma de entregables debe ser igual al valor total
 
 ## Módulo en progreso
-- CRUD de contratos
+- Flujo de aprobación de entregables
 
 ## Próximo paso exacto
-1. Crear src/app/api/contratos/route.ts (GET y POST)
-2. Crear src/app/dashboard/contratos/page.tsx
-3. Formulario para nuevo contrato con sus entregables
+1. Crear src/app/api/entregables/[id]/route.ts (PATCH para cambiar estado)
+2. Crear src/app/dashboard/contratos/[id]/page.tsx (detalle del contrato)
+3. Permitir subir evidencia y cambiar estado a EN_REVISION
 
 ## Última sesión
-21 Mar 2026 — Login funcionando. Admin entra al dashboard,
-contratista entra al portal. Middleware redirige según rol.
-Usuarios de prueba creados con seed.
-
+21 Mar 2026 — CRUD de contratos funcionando. Formulario
+con validación de suma de entregables. Contrato de prueba
+creado con Juan Pérez por $10.000.000.
 ## Tablas que necesita la BD
 - Usuario (id, nombre, email, rol, empresaId)
 - Empresa (id, nombre, nit)
