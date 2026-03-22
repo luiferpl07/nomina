@@ -27,25 +27,27 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - aprobador: revisa entregables, firma actas, libera pagos
 - contratista: ve sus contratos, sube evidencia, firma entregas
 
-### Módulos completados
+## Módulos completados
 - ✅ Proyecto creado con Next.js 14 + TypeScript + Tailwind
 - ✅ Estructura de carpetas y documentación inicial
 - ✅ Dependencias instaladas (prisma, next-auth, pdf-lib, resend)
 - ✅ Schema de base de datos creado y aplicado en PostgreSQL
+- ✅ Autenticación con NextAuth.js (JWT + roles)
+- ✅ Página de login creada
+- ✅ Tipos de sesión personalizados (id, rol, nombre, empresaId)
 
 ## Módulo en progreso
-- Autenticación con NextAuth.js (roles: admin, aprobador, contratista)
+- Dashboard principal por rol
 
 ## Próximo paso exacto
-Crear el sistema de autenticación:
-1. src/app/api/auth/[...nextauth]/route.ts
-2. src/lib/auth.ts con la configuración de NextAuth
-3. src/app/login/page.tsx con el formulario
+1. Crear src/app/dashboard/page.tsx
+2. Proteger la ruta con middleware
+3. Redirigir según el rol del usuario
 
 ## Última sesión
-21 Mar 2026 — Schema de BD creado con 7 tablas:
-Empresa, Usuario, Contrato, Entregable, Evidencia, Acta, Pago.
-PostgreSQL corriendo local. prisma db push exitoso.
+21 Mar 2026 — Autenticación completa con NextAuth.js.
+Login funciona con email y contraseña. JWT guarda rol,
+nombre y empresaId. TypeScript sin errores.
 
 ## Tablas que necesita la BD
 - Usuario (id, nombre, email, rol, empresaId)
