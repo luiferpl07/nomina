@@ -27,8 +27,8 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - aprobador: revisa entregables, firma actas, libera pagos
 - contratista: ve sus contratos, sube evidencia, firma entregas
 
-## Módulos completados
-- ✅ Proyecto creado con Next.js 14 + TypeScript + Tailwind
+### Módulos completados
+- ✅ Proyecto creado con Next.js 16 + TypeScript + Tailwind
 - ✅ Estructura de carpetas y documentación inicial
 - ✅ Dependencias instaladas (prisma, next-auth, pdf-lib, resend)
 - ✅ Schema de base de datos creado y aplicado en PostgreSQL
@@ -38,6 +38,7 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - ✅ Middleware de protección de rutas por rol
 - ✅ Dashboard admin y portal contratista básicos
 - ✅ Usuarios de prueba (admin@demo.com / juan@demo.com)
+- ✅ Cerrar sesión y navegación correcta por rol
 
 ## Módulo en progreso
 - CRUD de contratos
@@ -45,7 +46,7 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 ## Próximo paso exacto
 1. Crear src/app/api/contratos/route.ts (GET y POST)
 2. Crear src/app/dashboard/contratos/page.tsx
-3. Crear formulario para nuevo contrato con sus entregables
+3. Formulario para nuevo contrato con sus entregables
 
 ## Última sesión
 21 Mar 2026 — Login funcionando. Admin entra al dashboard,
