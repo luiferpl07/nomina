@@ -27,6 +27,13 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - NEXTAUTH_SECRET
 - NEXTAUTH_URL
 - RESEND_API_KEY → obtener en resend.com
+- CRON_SECRET → string aleatorio para proteger el endpoint de cron
+
+## Cómo configurar el cron en Railway
+1. Agregar CRON_SECRET al .env y en Railway dashboard
+2. En Railway: Settings → Cron Jobs → Add Cron Job
+   - Command: curl -H "Authorization: Bearer $CRON_SECRET" https://tu-dominio.com/api/cron/recordatorios
+   - Schedule: 0 8 * * * (todos los días a las 8am)
 
 ## Notas de diseño UI (sistema visual activo)
 - Fondo general: bg-[#f0ede8]
@@ -38,21 +45,24 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - Valores monetarios: font-mono text-[17px] font-medium tracking-[-0.5px]
 - Badges: text-[11px] font-medium px-2.5 py-1 rounded-full
   - Verde: bg-[#e6f5ed] text-[#1a7a4a]
-  - Ambar: bg-[#fef3dc] text-[#92600a]
+  - Ámbar: bg-[#fef3dc] text-[#92600a]
   - Rojo: bg-[#faeaea] text-[#a02020]
   - Gris: bg-black/[0.05] text-[#6b6a64]
 - Labels: text-[11px] font-medium uppercase tracking-[0.08em] text-[#999891]
 - Barras de progreso: h-[3px], azul #2d5be3, verde #1a7a4a
-- Boton primario: bg-[#1a1916] text-white rounded-[8px] hover:opacity-85
+- Botón primario: bg-[#1a1916] text-white rounded-[8px] hover:opacity-85
 - Inputs: border border-black/[0.12] rounded-[8px] focus border-[#2d5be3] ring-2 ring-[#2d5be3]/10
-- Sin max-width en paginas internas — p-8 full width
+- Sin max-width en páginas internas — p-8 full width
 
-## Logica de retencion en la fuente
+## Lógica de cálculo de pago al aprobar entregable
+1. valorConPenalizacion = valor - penalizacion + bono
+2. iva = ivaResponsable ? valorConPenalizacion * 19% : 0
+3. retencion = valorConPenalizacion * retencionPorcentaje%
+4. valorNeto = valorConPenalizacion + iva - retencion
+
+## Lógica de retención en la fuente
 - Se calcula sobre el valor total del contrato al momento de crearlo
 - El % queda guardado en Contrato.retencionPorcentaje
-- Al aprobar cada entregable: valor - penalizacion + bono = valorConPenalizacion
-- Retencion = valorConPenalizacion * retencionPorcentaje / 100
-- valorNeto = valorConPenalizacion - retencion (lo que recibe el contratista)
 - Tarifas DIAN 2025 default: 0% (<$1.133.000), 4%, 6%, 11% (>$4.789.000)
 - Tarifas configurables por empresa en tabla TarifaRetencion
 
@@ -66,8 +76,8 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - juan@demo.com / juan123 → rol CONTRATISTA
 
 ## Reglas de penalizaciones (src/lib/penalizaciones.ts)
-- 2% por dia de retraso, tope maximo 20%
-- +1% bono por dia anticipado, tope maximo 10%
+- 2% por día de retraso, tope máximo 20%
+- +1% bono por día anticipado, tope máximo 10%
 
 ---
 
@@ -75,71 +85,119 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 
 ### FASE 1 — MVP core ✅ COMPLETA
 - ✅ Proyecto creado con Next.js 16 + TypeScript + Tailwind
-- ✅ Autenticacion con NextAuth.js (JWT + roles)
+- ✅ Estructura de carpetas y documentación inicial
 - ✅ Schema de base de datos
-- ✅ Dashboard admin con metricas reales
-- ✅ Portal contratista con contratos y entregables
-- ✅ Flujo completo: enviar → aprobar/rechazar → pago registrado
-- ✅ Acta PDF con firma doble
-- ✅ Penalizaciones y bonos automaticos
+- ✅ Autenticación con NextAuth.js (JWT + roles)
+- ✅ Middleware de protección de rutas por rol
+- ✅ Dashboard admin con métricas reales
+- ✅ Portal contratista con contratos y entregables reales
+- ✅ API de contratos (GET y POST)
+- ✅ Formulario de nuevo contrato con entregables
+- ✅ Validación: suma de entregables igual al valor total
+- ✅ Detalle del contrato con progreso
+- ✅ Flujo completo: enviar a revisión → aprobar/rechazar → pago registrado
+- ✅ Generación de acta PDF profesional con firma doble
+- ✅ Penalizaciones y bonos automáticos por retraso o entrega anticipada
+- ✅ Rediseño UI con shadcn/ui — estilo Linear/Notion
+- ✅ Sidebar colapsable con layout flotante
 
 ### FASE 1.5 — UI/UX completo ✅ COMPLETA
-- ✅ Dashboard admin rediseñado
-- ✅ Sidebar colapsable
-- ✅ Contratos, detalle, portal y login rediseñados
+- ✅ Dashboard admin rediseñado con shadcn
+- ✅ Sidebar colapsable funcionando
+- ✅ Aplicar diseño a página de contratos → src/app/dashboard/contratos/page.tsx
+- ✅ Aplicar diseño a detalle del contrato → src/app/dashboard/contratos/[id]/page.tsx
+- ✅ Aplicar diseño a portal del contratista → src/app/portal/page.tsx
+- ✅ Página de login mejorada con ojito toggle → src/app/login/page.tsx
 
-### FASE 2 — Nomina inteligente 🔄 EN PROGRESO
-- ✅ Emails con Resend (revision, aprobado, rechazado)
-- ✅ Configuracion de penalizaciones desde UI
-- ✅ Retencion en la fuente automatica por contrato
+### FASE 2 — Nómina inteligente ✅ COMPLETA
+- ✅ Notificaciones por email con Resend
+  - ✅ Email al contratista cuando entregable es aprobado (desglose IVA + retención)
+  - ✅ Email al contratista cuando entregable es rechazado (con comentario)
+  - ✅ Email al admin cuando contratista envía a revisión
+  - ✅ Recordatorio automático cuando se acerca fecha límite (cron diario)
+- ✅ Configuración de penalizaciones desde UI
+  - ✅ src/app/dashboard/penalizaciones/page.tsx
+  - ✅ src/app/api/config/penalizaciones/route.ts
+- ✅ Retención en la fuente automática por contrato
   - ✅ src/lib/retencion.ts con tarifas DIAN 2025
   - ✅ Contrato.retencionPorcentaje calculado al crear
   - ✅ Pago con campos retencion y valorNeto
-  - ✅ Preview en NuevoContratoForm
-  - ✅ Email aprobado muestra desglose con retencion
-- ⏳ Recordatorio por email cuando se acerca fecha limite
-- ⏳ IVA en honorarios configurable por contratista
-- ⏳ Integracion DIAN nomina electronica
-- ⏳ Pagina de configuracion de tarifas de retencion (UI)
+  - ✅ Preview en NuevoContratoForm al escribir el valor total
+  - ✅ Página UI para editar rangos → src/app/dashboard/retencion/page.tsx
+  - ✅ src/app/api/config/retencion/route.ts
+- ✅ IVA en honorarios configurable por contratista
+  - ✅ Campo ivaResponsable en modelo Usuario
+  - ✅ Campo iva en modelo Pago
+  - ✅ Página UI con toggle por contratista → src/app/dashboard/iva/page.tsx
+  - ✅ src/app/api/config/iva/route.ts
+- ⏳ Integración DIAN nómina electrónica (movida a fase futura — requiere certificado digital)
+  - Generación de XML según estándar DIAN
+  - Transmisión y acuse de recibo
+  - Gestión de rechazos
 
 ### FASE 3 — Inteligencia y reportes
-- ⏳ Dashboard financiero con proyeccion de flujo de caja
-- ⏳ Ranking de desempeno de contratistas
-- ⏳ Rubricas de evaluacion al aprobar
-- ⏳ Log de auditoria inmutable
+- ⏳ Dashboard financiero con proyección de flujo de caja
+  - Cuánto se pagará en 30/60/90 días
+- ⏳ Ranking de desempeño de contratistas
+  - Puntualidad, calidad, rechazos
+  - Historial por contratista
+- ⏳ Rúbricas de evaluación al aprobar
+  - Calificar completitud, puntualidad, calidad (1-5)
+- ⏳ Log de auditoría inmutable
+  - Quién hizo qué, desde qué IP, a qué hora
+  - Exportable para auditorías legales
 - ⏳ Alertas predictivas
-- ⏳ Notificaciones por WhatsApp
+  - Detecta contratistas en riesgo de retraso
+- ⏳ Notificaciones por WhatsApp (Twilio/Meta API)
 
 ### FASE 4 — Escala y multiempresa
 - ⏳ Arquitectura multi-tenant
-- ⏳ Conciliacion bancaria
+  - Una instalación, múltiples empresas con datos aislados
+- ⏳ Conciliación bancaria
+  - Integración con PSE o Bancolombia API
 - ⏳ Plantillas de contrato reutilizables
-- ⏳ API publica + webhooks
-- ⏳ App movil para contratistas
-- ⏳ Deploy en Railway
+  - Clonar contratos con un clic
+- ⏳ API pública + webhooks
+  - Integración con Siigo, World Office, SAP
+- ⏳ App móvil para contratistas (React Native)
+  - Subir evidencia, ver pagos, firmar desde el celular
+- ⏳ Deploy en Railway con dominio propio
+
+### FASE DIAN — Nómina electrónica (futura)
+- ⏳ Certificado digital para firma XML
+- ⏳ Generación de XML según estándar DIAN
+- ⏳ Ambiente de pruebas DIAN (habilitación)
+- ⏳ Transmisión y acuse de recibo
+- ⏳ Gestión de rechazos y notas de ajuste
 
 ---
 
-## Modulo en progreso
-Fase 2 — Nomina inteligente
+## Módulo en progreso
+Fase 3 — Inteligencia y reportes
 
-## Proximo paso exacto
-1. Pagina UI de configuracion de tarifas de retencion
-2. Recordatorio por email cuando se acerca fecha limite de entregable
-3. IVA en honorarios configurable por contratista
+## Próximo paso exacto
+1. Dashboard financiero con proyección de flujo de caja (30/60/90 días)
+2. Ranking de desempeño de contratistas
+3. Log de auditoría inmutable
 
-## Ultima sesion
-21 Mar 2026 — Retencion en la fuente completa.
-Nuevo modelo TarifaRetencion en schema. Campo retencionPorcentaje
-en Contrato. Campos retencion y valorNeto en Pago.
-src/lib/retencion.ts con tarifas DIAN 2025.
-Route contratos calcula tarifa al crear.
-Route entregables descuenta retencion al aprobar.
-NuevoContratoForm con preview de retencion en tiempo real.
-Email aprobado con desglose completo.
+## Última sesión
+21 Mar 2026 — Fase 2 completa.
+IVA en honorarios: campo ivaResponsable en Usuario, campo iva en Pago.
+Página UI src/app/dashboard/iva/page.tsx con toggle por contratista.
+src/app/api/config/iva/route.ts (GET lista, PATCH toggle).
+Página UI tarifas retención src/app/dashboard/retencion/page.tsx.
+src/app/api/config/retencion/route.ts (GET/POST).
+Route entregables actualizado con lógica IVA completa.
+email.ts con IVA en desglose del template aprobado.
+Schema: ivaResponsable en Usuario, iva en Pago.
 
 ## Tablas BD
-- Usuario, Empresa, Contrato (+ retencionPorcentaje)
-- Entregable, Evidencia, Acta
-- Pago (+ retencion, valorNeto)
-- ConfigPenalizacion, TarifaRetencion (nuevas en fase 2)
+- Usuario (id, nombre, email, rol, empresaId, ivaResponsable)
+- Empresa (id, nombre, nit)
+- Contrato (id, titulo, valorTotal, empresaId, contratistaId, retencionPorcentaje)
+- Entregable (id, nombre, valor, fechaLimite, estado, contratoId)
+- Evidencia (id, url, nombre, entregableId, subidoPorId)
+- Acta (id, entregableId, firmaContratista, firmaAprobador, pdfUrl)
+- Pago (id, entregableId, valor, iva, retencion, valorNeto, estado, fecha)
+- ConfigPenalizacion (id, empresaId, porcentajePorDia, topeMaximo, bonoPorDia, topeBonoMaximo)
+- TarifaRetencion (id, empresaId, desde, hasta, porcentaje, orden)

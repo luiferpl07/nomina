@@ -4,13 +4,10 @@ import { authOptions } from "@/lib/auth";
 import { PrismaClient } from "@prisma/client";
 import { calcularPenalizacion } from "@/lib/penalizaciones";
 import { calcularMontoRetencion } from "@/lib/retencion";
-import {
-  emailRevisionAdmin,
-  emailAprobado,
-  emailRechazado,
-} from "@/lib/email";
+import { emailRevisionAdmin, emailAprobado, emailRechazado } from "@/lib/email";
 
 const prisma = new PrismaClient();
+const IVA_PORCENTAJE = 19;
 
 export async function PATCH(
   req: Request,
@@ -22,15 +19,16 @@ export async function PATCH(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const { id } = await params;
-    const body = await req.json();
-    const { estado, comentario } = body;
+    const { estado, comentario } = await req.json();
 
     const entregable = await prisma.entregable.findUnique({
       where: { id },
       include: {
         contrato: {
           include: {
-            contratista: { select: { id: true, nombre: true, email: true } },
+            contratista: {
+              select: { id: true, nombre: true, email: true, ivaResponsable: true },
+            },
             empresa: {
               include: {
                 usuarios: {
@@ -54,7 +52,6 @@ export async function PATCH(
     const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     const urlDetalle = `${baseUrl}/dashboard/contratos/${entregable.contratoId}`;
 
-    // ── EN_REVISION ──────────────────────────────────────────────────────────
     if (estado === "EN_REVISION") {
       await prisma.acta.upsert({
         where: { entregableId: id },
@@ -72,23 +69,25 @@ export async function PATCH(
           contratoTitulo: entregable.contrato.titulo,
           valor: entregable.valor,
           url: urlDetalle,
-        }).catch((err) => console.error("Email admin error:", err));
+        }).catch(console.error);
       }
     }
 
-    // ── APROBADO ─────────────────────────────────────────────────────────────
     if (estado === "APROBADO") {
-      const fechaEntrega = new Date();
       const { penalizacion, bono, diasRetraso } = calcularPenalizacion(
         entregable.valor,
         entregable.fechaLimite,
-        fechaEntrega
+        new Date()
       );
 
       const valorConPenalizacion = entregable.valor - penalizacion + bono;
+      const esIvaResponsable = entregable.contrato.contratista.ivaResponsable;
+      const iva = esIvaResponsable
+        ? Math.round((valorConPenalizacion * IVA_PORCENTAJE) / 100)
+        : 0;
       const retencionPorcentaje = entregable.contrato.retencionPorcentaje;
       const retencion = calcularMontoRetencion(valorConPenalizacion, retencionPorcentaje);
-      const valorNeto = valorConPenalizacion - retencion;
+      const valorNeto = valorConPenalizacion + iva - retencion;
 
       await prisma.entregable.update({
         where: { id },
@@ -100,64 +99,45 @@ export async function PATCH(
 
       await prisma.acta.update({
         where: { entregableId: id },
-        data: {
-          firmaAprobador: new Date(),
-          aprobadorId: session.user.id,
-          comentario,
-        },
+        data: { firmaAprobador: new Date(), aprobadorId: session.user.id, comentario },
       });
 
       await prisma.pago.upsert({
         where: { entregableId: id },
-        update: {
-          estado: "PAGADO",
-          fecha: new Date(),
-          valor: valorConPenalizacion,
-          retencion,
-          valorNeto,
-        },
-        create: {
-          entregableId: id,
-          valor: valorConPenalizacion,
-          retencion,
-          valorNeto,
-          estado: "PAGADO",
-          fecha: new Date(),
-        },
+        update: { estado: "PAGADO", fecha: new Date(), valor: valorConPenalizacion, iva, retencion, valorNeto },
+        create: { entregableId: id, valor: valorConPenalizacion, iva, retencion, valorNeto, estado: "PAGADO", fecha: new Date() },
       });
 
-      const contratista = entregable.contrato.contratista;
       await emailAprobado({
-        contratistaNombre: contratista.nombre,
-        contratistaEmail: contratista.email,
+        contratistaNombre: entregable.contrato.contratista.nombre,
+        contratistaEmail: entregable.contrato.contratista.email,
         entregableNombre: entregable.nombre,
         contratoTitulo: entregable.contrato.titulo,
         valorOriginal: entregable.valor,
         valorFinal: valorNeto,
         penalizacion,
         bono,
+        iva,
         retencion,
         retencionPorcentaje,
         url: urlDetalle,
-      }).catch((err) => console.error("Email aprobado error:", err));
+      }).catch(console.error);
     }
 
-    // ── RECHAZADO ─────────────────────────────────────────────────────────────
     if (estado === "RECHAZADO") {
       await prisma.acta.update({
         where: { entregableId: id },
         data: { comentario },
       });
 
-      const contratista = entregable.contrato.contratista;
       await emailRechazado({
-        contratistaNombre: contratista.nombre,
-        contratistaEmail: contratista.email,
+        contratistaNombre: entregable.contrato.contratista.nombre,
+        contratistaEmail: entregable.contrato.contratista.email,
         entregableNombre: entregable.nombre,
         contratoTitulo: entregable.contrato.titulo,
         comentario,
         url: urlDetalle,
-      }).catch((err) => console.error("Email rechazado error:", err));
+      }).catch(console.error);
     }
 
     const actualizado = await prisma.entregable.update({
@@ -167,7 +147,7 @@ export async function PATCH(
 
     return NextResponse.json(actualizado);
   } catch (error) {
-    console.error("ERROR DETALLADO:", error);
+    console.error("ERROR:", error);
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
 }

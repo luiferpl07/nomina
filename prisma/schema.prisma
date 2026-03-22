@@ -48,32 +48,32 @@ model ConfigPenalizacion {
   updatedAt        DateTime @updatedAt
 }
 
-// Tarifas de retención en la fuente (honorarios) — configurables por empresa
 model TarifaRetencion {
   id          String   @id @default(cuid())
   empresaId   String
   empresa     Empresa  @relation(fields: [empresaId], references: [id])
-  desde       Int      // valor mínimo del contrato en pesos
-  hasta       Int?     // null = sin límite superior
-  porcentaje  Int      // % de retención
-  orden       Int      // para ordenar los rangos de menor a mayor
+  desde       Int
+  hasta       Int?
+  porcentaje  Int
+  orden       Int
   createdAt   DateTime @default(now())
 
   @@index([empresaId, orden])
 }
 
 model Usuario {
-  id            String      @id @default(cuid())
-  nombre        String
-  email         String      @unique
-  password      String
-  rol           Rol
-  empresaId     String
-  empresa       Empresa     @relation(fields: [empresaId], references: [id])
-  createdAt     DateTime    @default(now())
-  contratos     Contrato[]  @relation("Contratista")
-  evidencias    Evidencia[]
-  actasFirmadas Acta[]      @relation("Aprobador")
+  id             String      @id @default(cuid())
+  nombre         String
+  email          String      @unique
+  password       String
+  rol            Rol
+  empresaId      String
+  empresa        Empresa     @relation(fields: [empresaId], references: [id])
+  ivaResponsable Boolean     @default(false) // si cobra IVA 19% en sus honorarios
+  createdAt      DateTime    @default(now())
+  contratos      Contrato[]  @relation("Contratista")
+  evidencias     Evidencia[]
+  actasFirmadas  Acta[]      @relation("Aprobador")
 }
 
 model Contrato {
@@ -87,7 +87,7 @@ model Contrato {
   empresa             Empresa      @relation(fields: [empresaId], references: [id])
   contratistaId       String
   contratista         Usuario      @relation("Contratista", fields: [contratistaId], references: [id])
-  retencionPorcentaje Int          @default(0) // % calculado al crear según valorTotal
+  retencionPorcentaje Int          @default(0)
   createdAt           DateTime     @default(now())
   entregables         Entregable[]
 }
@@ -138,7 +138,8 @@ model Pago {
   entregableId String     @unique
   entregable   Entregable @relation(fields: [entregableId], references: [id])
   valor        Int        // valor base después de penalización/bono
-  retencion    Int        @default(0) // monto descontado por retención
+  iva          Int        @default(0) // IVA 19% si el contratista es responsable
+  retencion    Int        @default(0)
   valorNeto    Int        @default(0) // lo que recibe el contratista
   estado       EstadoPago @default(PENDIENTE)
   fecha        DateTime?
