@@ -2,15 +2,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
-import Sidebar from "@/components/Sidebar";
+import SidebarWrapper from "@/components/SidebarWrapper";
 
 const prisma = new PrismaClient();
 
 export default async function DashboardLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
@@ -20,13 +18,13 @@ export default async function DashboardLayout({
   });
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar
+    <div className="flex min-h-screen bg-stone-200 p-2 gap-2">
+      <SidebarWrapper
         rol={session.user.rol}
         nombre={session.user.nombre}
         empresaNombre={empresa?.nombre ?? ""}
       />
-      <main className="flex-1 ml-56 min-h-screen">
+      <main className="main-content flex-1 bg-stone-50 rounded-2xl overflow-auto">
         {children}
       </main>
     </div>

@@ -9,38 +9,44 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 ## Stack
 - Framework: Next.js 16 con App Router
 - Lenguaje: TypeScript
-- Estilos: Tailwind CSS
+- Estilos: Tailwind CSS + shadcn/ui (preset Nova)
 - Base de datos: PostgreSQL + Prisma ORM
-- Autenticación: NextAuth.js (roles: admin, aprobador, contratista)
-- Archivos/PDFs: Cloudflare R2 + pdf-lib
-- Emails: Resend
-- Deploy: Railway
-- Nota importante: en Next.js 16 los params son siempre una Promise,
-  usar await params en todas las rutas dinámicas
+- Autenticación: NextAuth.js (roles: ADMIN, APROBADOR, CONTRATISTA)
+- Archivos/PDFs: pdf-lib
+- Emails: Resend (instalado, no configurado aún)
+- Deploy: Railway (pendiente)
+- UI Components: shadcn/ui con Radix
 
-## Decisiones importantes
-- Valores monetarios en pesos enteros (sin decimales) en la BD
-- App Router de Next.js (no Pages Router)
-- Un solo repositorio para frontend y backend (monorepo)
-- Los archivos de evidencia nunca se borran, solo se archivan
+## Notas importantes de Next.js 16
+- Los params son siempre Promise — usar await params en todas las rutas dinámicas
+- Después de cambiar schema de Prisma siempre correr npx prisma generate
+- Comandos en PowerShell: usar New-Item en vez de touch, Remove-Item en vez de rm
 
 ## Roles del sistema
-- admin: crea contratos, ve todo, configura penalizaciones
-- aprobador: revisa entregables, firma actas, libera pagos
-- contratista: ve sus contratos, sube evidencia, firma entregas
+- ADMIN: crea contratos, ve todo, configura penalizaciones, aprueba entregables
+- APROBADOR: revisa entregables, firma actas, libera pagos
+- CONTRATISTA: ve sus contratos, sube evidencia, firma entregas
 
-## Módulos completados
+## Usuarios de prueba
+- admin@demo.com / admin123 → rol ADMIN
+- juan@demo.com / juan123 → rol CONTRATISTA
+
+## Reglas de penalizaciones (src/lib/penalizaciones.ts)
+- 2% por día de retraso, tope máximo 20%
+- +1% bono por día anticipado, tope máximo 10%
+
+---
+
+## ROADMAP COMPLETO
+
+### FASE 1 — MVP core ✅ COMPLETA
 - ✅ Proyecto creado con Next.js 16 + TypeScript + Tailwind
 - ✅ Estructura de carpetas y documentación inicial
-- ✅ Dependencias instaladas (prisma, next-auth, pdf-lib, resend)
-- ✅ Schema de base de datos creado y aplicado en PostgreSQL
+- ✅ Schema de base de datos (7 tablas: Empresa, Usuario, Contrato, Entregable, Evidencia, Acta, Pago)
 - ✅ Autenticación con NextAuth.js (JWT + roles)
-- ✅ Página de login creada
-- ✅ Tipos de sesión personalizados (id, rol, nombre, empresaId)
 - ✅ Middleware de protección de rutas por rol
-- ✅ Dashboard admin y portal contratista con datos reales
-- ✅ Usuarios de prueba (admin@demo.com / juan@demo.com)
-- ✅ Cerrar sesión y navegación por roles
+- ✅ Dashboard admin con métricas reales
+- ✅ Portal contratista con contratos y entregables reales
 - ✅ API de contratos (GET y POST)
 - ✅ Formulario de nuevo contrato con entregables
 - ✅ Validación: suma de entregables igual al valor total
@@ -48,26 +54,78 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - ✅ Flujo completo: enviar a revisión → aprobar/rechazar → pago registrado
 - ✅ Generación de acta PDF profesional con firma doble
 - ✅ Penalizaciones y bonos automáticos por retraso o entrega anticipada
+- ✅ Rediseño UI con shadcn/ui — estilo Linear/Notion
+- ✅ Sidebar colapsable con layout flotante
+
+### FASE 1.5 — UI/UX completo 🔄 EN PROGRESO
+- ✅ Dashboard admin rediseñado con shadcn
+- ✅ Sidebar colapsable funcionando
+- ⏳ Aplicar diseño a página de contratos
+- ⏳ Aplicar diseño a detalle del contrato
+- ⏳ Aplicar diseño a portal del contratista
+- ⏳ Aplicar diseño a página de login
+- ⏳ Página de login mejorada
+
+### FASE 2 — Nómina inteligente
+- ⏳ Notificaciones por email con Resend
+  - Email al contratista cuando entregable es aprobado/rechazado
+  - Email al admin cuando contratista envía a revisión
+  - Recordatorio cuando se acerca fecha límite
+- ⏳ Integración DIAN nómina electrónica
+  - Generación de XML según estándar DIAN
+  - Transmisión y acuse de recibo
+  - Gestión de rechazos
+- ⏳ Retención en la fuente automática
+  - Cálculo por rango de ingresos según tabla DIAN vigente
+  - Configurable sin deploy
+- ⏳ IVA en honorarios configurable por contratista
+- ⏳ Página de configuración de penalizaciones (UI para editar reglas)
+
+### FASE 3 — Inteligencia y reportes
+- ⏳ Dashboard financiero con proyección de flujo de caja
+  - Cuánto se pagará en 30/60/90 días
+- ⏳ Ranking de desempeño de contratistas
+  - Puntualidad, calidad, rechazos
+  - Historial por contratista
+- ⏳ Rúbricas de evaluación al aprobar
+  - Calificar completitud, puntualidad, calidad (1-5)
+- ⏳ Log de auditoría inmutable
+  - Quién hizo qué, desde qué IP, a qué hora
+  - Exportable para auditorías legales
+- ⏳ Alertas predictivas
+  - Detecta contratistas en riesgo de retraso
+- ⏳ Notificaciones por WhatsApp (Twilio/Meta API)
+
+### FASE 4 — Escala y multiempresa
+- ⏳ Arquitectura multi-tenant
+  - Una instalación, múltiples empresas con datos aislados
+- ⏳ Conciliación bancaria
+  - Integración con PSE o Bancolombia API
+- ⏳ Plantillas de contrato reutilizables
+  - Clonar contratos con un clic
+- ⏳ API pública + webhooks
+  - Integración con Siigo, World Office, SAP
+- ⏳ App móvil para contratistas (React Native)
+  - Subir evidencia, ver pagos, firmar desde el celular
+- ⏳ Deploy en Railway con dominio propio
+
+---
 
 ## Módulo en progreso
-- Notificaciones por email con Resend
+UI/UX — aplicar diseño a todas las pantallas
 
 ## Próximo paso exacto
-1. Crear src/lib/emails.ts con plantillas de email
-2. Enviar email al contratista cuando un entregable es aprobado o rechazado
-3. Enviar email al admin cuando un contratista envía a revisión
+1. Arreglar sidebar colapsable (usar SidebarWrapper)
+2. Aplicar diseño shadcn a src/app/dashboard/contratos/page.tsx
+3. Aplicar diseño shadcn a src/app/dashboard/contratos/[id]/page.tsx
+4. Aplicar diseño shadcn a src/app/portal/page.tsx
+5. Mejorar página de login
 
 ## Última sesión
-21 Mar 2026 — Penalizaciones y bonos funcionando.
-Sistema calcula automáticamente según días de retraso
-o anticipación. Bono de $500.000 aplicado al Backend API
-por entrega 30 días anticipada.
-
-## Nota importante Next.js 16
-Los params son siempre Promise — usar await params en
-todas las rutas dinámicas. Después de cambiar schema
-de Prisma siempre correr npx prisma generate.
-
+21 Mar 2026 — Rediseño completo del dashboard con shadcn/ui.
+Sidebar colapsable estilo Linear con fondo stone-200 exterior
+y panel blanco redondeado. Acta PDF con diseño profesional.
+Penalizaciones y bonos automáticos funcionando.
 
 ## Tablas que necesita la BD
 - Usuario (id, nombre, email, rol, empresaId)

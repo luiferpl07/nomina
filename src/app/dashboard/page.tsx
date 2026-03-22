@@ -3,6 +3,17 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const prisma = new PrismaClient();
 
@@ -38,62 +49,90 @@ export default async function DashboardPage() {
   const hoy = new Date();
   const fechaTexto = `${diasSemana[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
 
-  const metrics = [
-    { label: "Contratos activos", valor: contratos.length, sub: "en curso", color: "" },
-    { label: "Por pagar", valor: `$${totalPorPagar.toLocaleString()}`, sub: "en entregables pendientes", color: "" },
-    { label: "En revisión", valor: enRevision, sub: enRevision === 1 ? "entregable" : "entregables", color: "text-amber-600" },
-    { label: "Total pagado", valor: `$${totalPagado.toLocaleString()}`, sub: "liberado a contratistas", color: "text-green-600" },
-  ];
-
   return (
     <div className="p-8">
+      {/* Encabezado */}
       <div className="mb-8">
-        <h1 className="text-xl font-semibold text-stone-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-stone-900">
           Buenos días, {session.user.nombre.split(" ")[0]}
         </h1>
         <p className="text-sm text-stone-400 mt-1 capitalize">{fechaTexto}</p>
       </div>
 
       {/* Métricas */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        {metrics.map((m) => (
-          <div key={m.label} className="bg-white rounded-xl border border-stone-100 p-5">
-            <p className="text-xs font-medium text-stone-400 mb-3">{m.label}</p>
-            <p className={`text-2xl font-semibold ${m.color || "text-stone-900"}`}>{m.valor}</p>
-            <p className="text-xs text-stone-400 mt-1">{m.sub}</p>
-          </div>
-        ))}
-      </div>
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <Card className="shadow-sm border-stone-100 hover:shadow-md transition-shadow">
+            <CardHeader className="pb-1 pt-5 px-6">
+            <CardTitle className="text-xs font-medium text-stone-400 uppercase tracking-wide">Contratos activos</CardTitle>
+            </CardHeader>
+            <CardContent className="px-6 pb-5">
+            <p className="text-4xl font-semibold text-stone-900 mt-1">{contratos.length}</p>
+            <p className="text-xs text-stone-400 mt-2">en curso</p>
+            </CardContent>
+        </Card>
 
-      {/* Tabla */}
-      <div className="bg-white rounded-xl border border-stone-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-stone-50 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-stone-900">Contratos</h2>
-          <Link
-            href="/dashboard/contratos"
-            className="text-xs bg-stone-900 text-white px-3 py-1.5 rounded-lg hover:bg-stone-800"
-          >
-            + Nuevo
-          </Link>
+        <Card className="shadow-sm border-stone-100 hover:shadow-md transition-shadow">
+            <CardHeader className="pb-1 pt-5 px-6">
+            <CardTitle className="text-xs font-medium text-stone-400 uppercase tracking-wide">Por pagar</CardTitle>
+            </CardHeader>
+            <CardContent className="px-6 pb-5">
+            <p className="text-4xl font-semibold text-stone-900 mt-1">${totalPorPagar.toLocaleString()}</p>
+            <p className="text-xs text-stone-400 mt-2">en entregables pendientes</p>
+            </CardContent>
+        </Card>
+
+        <Card className="shadow-sm border-stone-100 hover:shadow-md transition-shadow">
+            <CardHeader className="pb-1 pt-5 px-6">
+            <CardTitle className="text-xs font-medium text-stone-400 uppercase tracking-wide">En revisión</CardTitle>
+            </CardHeader>
+            <CardContent className="px-6 pb-5">
+            <p className="text-4xl font-semibold text-amber-500 mt-1">{enRevision}</p>
+            <p className="text-xs text-stone-400 mt-2">{enRevision === 1 ? "entregable esperando" : "entregables esperando"}</p>
+            </CardContent>
+        </Card>
+
+        <Card className="shadow-sm border-stone-100 hover:shadow-md transition-shadow">
+            <CardHeader className="pb-1 pt-5 px-6">
+            <CardTitle className="text-xs font-medium text-stone-400 uppercase tracking-wide">Total pagado</CardTitle>
+            </CardHeader>
+            <CardContent className="px-6 pb-5">
+            <div className="flex items-center gap-2 mt-1 mb-1">
+                <p className="text-4xl font-semibold text-green-600">${totalPagado.toLocaleString()}</p>
+            </div>
+            <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 text-xs">
+                liberado este mes
+            </Badge>
+            </CardContent>
+        </Card>
         </div>
+      {/* Tabla de contratos */}
+      <Card className="shadow-none border-stone-100">
+        <CardHeader className="flex flex-row items-center justify-between py-4">
+          <CardTitle className="text-sm font-semibold text-stone-900">Contratos</CardTitle>
+          <Button asChild size="sm" className="bg-stone-900 hover:bg-stone-800 text-white h-8 text-xs">
+            <Link href="/dashboard/contratos">+ Nuevo</Link>
+          </Button>
+        </CardHeader>
 
         {contratos.length === 0 ? (
-          <div className="p-16 text-center">
+          <CardContent className="py-16 text-center">
             <p className="text-sm text-stone-400">No hay contratos aún</p>
             <Link href="/dashboard/contratos" className="inline-block mt-3 text-xs text-stone-900 underline underline-offset-2">
               Crear el primero →
             </Link>
-          </div>
+          </CardContent>
         ) : (
-          <>
-            <div className="grid grid-cols-12 px-6 py-2.5 border-b border-stone-50">
-              {["Proyecto", "Contratista", "Progreso", "Pagado", "Total"].map((h, i) => (
-                <p key={h} className={`text-xs font-medium text-stone-400 ${i === 0 ? "col-span-4" : i === 1 ? "col-span-3" : i === 2 ? "col-span-2" : "col-span-1 text-right"} ${i >= 3 ? "col-span-1" : ""}`}>
-                  {h}
-                </p>
-              ))}
-            </div>
-            <div className="divide-y divide-stone-50">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-stone-100 hover:bg-transparent">
+                <TableHead className="text-xs text-stone-400 font-medium">Proyecto</TableHead>
+                <TableHead className="text-xs text-stone-400 font-medium">Contratista</TableHead>
+                <TableHead className="text-xs text-stone-400 font-medium">Progreso</TableHead>
+                <TableHead className="text-xs text-stone-400 font-medium text-right">Pagado</TableHead>
+                <TableHead className="text-xs text-stone-400 font-medium text-right">Total</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {contratos.map((c) => {
                 const aprobados = c.entregables.filter((e) => e.estado === "APROBADO").length;
                 const enRevisionC = c.entregables.filter((e) => e.estado === "EN_REVISION").length;
@@ -103,41 +142,55 @@ export default async function DashboardPage() {
                   .reduce((sum, e) => sum + (e.pago?.valor ?? e.valor), 0);
 
                 return (
-                  <Link key={c.id} href={`/dashboard/contratos/${c.id}`}>
-                    <div className="grid grid-cols-12 px-6 py-4 hover:bg-stone-50 transition-colors items-center cursor-pointer">
-                      <div className="col-span-4">
+                  <TableRow
+                    key={c.id}
+                    className="border-stone-50 cursor-pointer hover:bg-stone-50 transition-colors"
+                  >
+                    <TableCell>
+                      <Link href={`/dashboard/contratos/${c.id}`} className="block">
                         <p className="text-sm font-medium text-stone-900">{c.titulo}</p>
                         {enRevisionC > 0 && (
-                          <span className="inline-block mt-1 text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                          <Badge variant="outline" className="mt-1 text-xs text-amber-600 border-amber-200 bg-amber-50">
                             {enRevisionC} en revisión
-                          </span>
+                          </Badge>
                         )}
-                      </div>
-                      <div className="col-span-3">
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/dashboard/contratos/${c.id}`} className="block">
                         <p className="text-sm text-stone-500">{c.contratista.nombre}</p>
-                      </div>
-                      <div className="col-span-2">
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/dashboard/contratos/${c.id}`} className="block">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-stone-900 rounded-full" style={{ width: `${progreso}%` }} />
+                            <div
+                              className="h-full bg-stone-900 rounded-full transition-all"
+                              style={{ width: `${progreso}%` }}
+                            />
                           </div>
-                          <span className="text-xs text-stone-400">{progreso}%</span>
+                          <span className="text-xs text-stone-400 min-w-[32px]">{progreso}%</span>
                         </div>
-                      </div>
-                      <div className="col-span-1 text-right">
-                        <p className="text-sm text-green-600 font-medium">${pagadoC.toLocaleString()}</p>
-                      </div>
-                      <div className="col-span-2 text-right">
-                        <p className="text-sm text-stone-900 font-medium">${c.valorTotal.toLocaleString()}</p>
-                      </div>
-                    </div>
-                  </Link>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Link href={`/dashboard/contratos/${c.id}`} className="block">
+                        <p className="text-sm font-medium text-green-600">${pagadoC.toLocaleString()}</p>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Link href={`/dashboard/contratos/${c.id}`} className="block">
+                        <p className="text-sm font-medium text-stone-900">${c.valorTotal.toLocaleString()}</p>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </div>
-          </>
+            </TableBody>
+          </Table>
         )}
-      </div>
+      </Card>
     </div>
   );
 }
