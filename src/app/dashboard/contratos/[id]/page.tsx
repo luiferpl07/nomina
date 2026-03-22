@@ -33,8 +33,6 @@ export default async function DetalleContratoPage({
 
   if (!contrato) redirect("/dashboard/contratos");
 
-  if (!contrato) redirect("/dashboard/contratos");
-
   const pagado = contrato.entregables
     .filter((e) => e.estado === "APROBADO")
     .reduce((sum, e) => sum + e.valor, 0);
@@ -146,19 +144,29 @@ export default async function DetalleContratoPage({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-400">
-                  Vence:{" "}
-                  {new Date(e.fechaLimite).toLocaleDateString("es-CO")}
-                </p>
+            <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-400">
+                Vence: {new Date(e.fechaLimite).toLocaleDateString("es-CO")}
+            </p>
+            <div className="flex items-center gap-4">
+                {e.estado === "APROBADO" && e.acta && (
+                <a
+                    href={`/api/actas/${e.acta.id}/pdf`}
+                    target="_blank"
+                    className="text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                    Descargar acta PDF
+                </a>
+                )}
                 <AccionesEntregable
-                  entregableId={e.id}
-                  estado={e.estado}
-                  rol={session.user.rol}
-                  firmaContratista={e.acta?.firmaContratista?.toISOString() ?? null}
-                  firmaAprobador={e.acta?.firmaAprobador?.toISOString() ?? null}
+                entregableId={e.id}
+                estado={e.estado}
+                rol={session.user.rol}
+                firmaContratista={e.acta?.firmaContratista?.toISOString() ?? null}
+                firmaAprobador={e.acta?.firmaAprobador?.toISOString() ?? null}
                 />
-              </div>
+            </div>
+            </div>
             </div>
           ))}
         </div>
