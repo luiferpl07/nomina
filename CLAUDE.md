@@ -47,19 +47,26 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - ✅ Detalle del contrato con progreso
 - ✅ Flujo completo: enviar a revisión → aprobar/rechazar → pago registrado
 - ✅ Generación de acta PDF profesional con firma doble
+- ✅ Penalizaciones y bonos automáticos por retraso o entrega anticipada
 
 ## Módulo en progreso
-- Penalizaciones y bonificaciones automáticas
+- Notificaciones por email con Resend
 
 ## Próximo paso exacto
-1. Crear src/app/api/penalizaciones/route.ts
-2. Agregar campo penalizacion en modelo Entregable
-3. Calcular automáticamente al aprobar según días de retraso
+1. Crear src/lib/emails.ts con plantillas de email
+2. Enviar email al contratista cuando un entregable es aprobado o rechazado
+3. Enviar email al admin cuando un contratista envía a revisión
 
 ## Última sesión
-21 Mar 2026 — PDF del acta generado con diseño profesional.
-Flujo completo funcionando: contratista entrega, admin aprueba,
-acta PDF descargable con firmas digitales de ambas partes.
+21 Mar 2026 — Penalizaciones y bonos funcionando.
+Sistema calcula automáticamente según días de retraso
+o anticipación. Bono de $500.000 aplicado al Backend API
+por entrega 30 días anticipada.
+
+## Nota importante Next.js 16
+Los params son siempre Promise — usar await params en
+todas las rutas dinámicas. Después de cambiar schema
+de Prisma siempre correr npx prisma generate.
 
 
 ## Tablas que necesita la BD
