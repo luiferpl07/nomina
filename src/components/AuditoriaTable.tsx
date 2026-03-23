@@ -39,7 +39,7 @@ interface Log {
   entidad: string;
   entidadId: string;
   detalle: Record<string, unknown>;
-  ip: string;
+  ip: string | null;
   creadoEn: string;
   usuario: { id: string; nombre: string; email: string; rol: string };
 }

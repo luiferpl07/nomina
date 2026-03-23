@@ -88,6 +88,16 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - Prisma campos Json: castear siempre como Prisma.InputJsonValue
 - Plantillas usan sessionStorage para pasar datos al formulario vía ?plantilla=1
 - usePlantillaActiva() hook lee sessionStorage y limpia después de leer
+- emailAlertasCriticas() está en src/lib/email.ts (añadida al final en sesión 23 Mar)
+
+## Lógica de alertas predictivas (src/lib/alertas.ts)
+- Umbral conservador-moderado: historial >40% tarde O vence en ≤3 días
+- Nivel CRITICO: vence hoy/mañana (con o sin historial si es hoy, con historial si es mañana)
+- Nivel ALTO: vence ≤3 días + historial >40%, o historial >60% + vence ≤5 días
+- Nivel MEDIO: historial >40% + vence ≤7 días, o vence ≤3 días sin historial
+- calcularAlertas(empresaId) → AlertaPredictiva[] ordenado CRITICO→ALTO→MEDIO→fecha
+- El cron diario también envía emailAlertasCriticas() al admin si hay alertas CRITICO
+- Sidebar muestra badge rojo con conteo via fetch /api/alertas al montar
 
 ---
 
@@ -107,6 +117,8 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - ✅ Detalle del contrato con progreso
 - ✅ Flujo completo: enviar a revisión → aprobar/rechazar → pago registrado
 - ✅ Generación de acta PDF profesional con firma doble
+  - ✅ src/app/dashboard/actas/page.tsx — listado con métricas, firmas y descarga PDF
+  - ✅ src/app/api/actas/route.ts
 - ✅ Penalizaciones y bonos automáticos por retraso o entrega anticipada
 - ✅ Rediseño UI con shadcn/ui — estilo Linear/Notion
 - ✅ Sidebar colapsable con layout flotante
@@ -160,8 +172,6 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
   - ✅ src/app/dashboard/auditoria/page.tsx con filtros y exportación CSV
   - ✅ src/app/api/auditoria/route.ts
   - ✅ Integrado en aprobar y rechazar entregable
-- ⏳ Alertas predictivas (movido a Fase 4)
-- ⏳ Notificaciones por WhatsApp (movido a Fase 4)
 
 ### FASE 4 — Escala y multiempresa 🔄 EN PROGRESO
 - ✅ Plantillas de contrato reutilizables
@@ -175,8 +185,12 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
   - ✅ src/hooks/usePlantillaActiva.ts
   - ✅ NuevoContratoForm precarga desde plantilla con banner verde
   - ✅ Sidebar actualizado con Plantillas, Ranking y Auditoría
-- ⏳ Alertas predictivas
-  - Detecta contratistas en riesgo de retraso basado en historial
+- ✅ Alertas predictivas de riesgo
+  - ✅ src/lib/alertas.ts — algoritmo CRITICO/ALTO/MEDIO
+  - ✅ src/app/api/alertas/route.ts
+  - ✅ Panel de alertas en dashboard admin con colores por nivel
+  - ✅ Badge rojo en sidebar con conteo en tiempo real
+  - ✅ emailAlertasCriticas() integrado en cron diario
 - ⏳ Arquitectura multi-tenant
   - Una instalación, múltiples empresas con datos aislados
 - ⏳ Conciliación bancaria
@@ -201,19 +215,27 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 Fase 4 — Escala y multiempresa
 
 ## Próximo paso exacto
-1. Alertas predictivas de riesgo de retraso
-2. Notificaciones por WhatsApp (Twilio/Meta API)
-3. Arquitectura multi-tenant
+1. Notificaciones por WhatsApp (Twilio/Meta API)
+2. Deploy en Railway con dominio propio
+3. Conciliación bancaria (PSE / Bancolombia)
 
 ## Última sesión
-23 Mar 2026 — Plantillas de contrato reutilizables.
-- Modelo PlantillaContrato con entregables como JSON (diasPlazo en vez de fechas fijas)
-- API CRUD completa para plantillas
-- Botón "Guardar como plantilla" en detalle de contrato (BtnGuardarPlantilla)
-- Página /dashboard/plantillas con lista, expand/collapse y botón "Usar plantilla"
-- Hook usePlantillaActiva() lee sessionStorage y precarga NuevoContratoForm
-- Banner verde en formulario cuando viene de plantilla
-- Sidebar actualizado: Plantillas, Ranking, Auditoría
+23 Mar 2026 — Páginas faltantes: actas PDF y log de auditoría.
+- src/app/dashboard/actas/page.tsx: listado de todas las actas con métricas,
+  estado de firmas (C/A), valor neto y botón de descarga PDF por fila
+- src/app/api/actas/route.ts: GET /api/actas filtrado por empresa
+- src/app/dashboard/auditoria/page.tsx: server component con 3 métricas
+  rápidas + AuditoriaTable (filtros por acción/usuario, paginación, CSV)
+- src/app/api/auditoria/route.ts: GET /api/auditoria con filtros y paginación
+
+## Sesión anterior
+23 Mar 2026 — Alertas predictivas de riesgo de retraso.
+- src/lib/alertas.ts con algoritmo de 3 niveles (umbral conservador-moderado)
+- Endpoint GET /api/alertas protegido por rol
+- Panel de alertas en dashboard admin con colores CRITICO/ALTO/MEDIO
+- Badge rojo con contador en sidebar (hidratado client-side)
+- emailAlertasCriticas() añadida a email.ts
+- Cron actualizado para enviar alertas críticas al admin cada mañana
 
 ## Tablas BD
 - Usuario (id, nombre, email, rol, empresaId, ivaResponsable)
@@ -228,3 +250,11 @@ Fase 4 — Escala y multiempresa
 - Rubrica (id, entregableId, completitud, puntualidad, calidad, comentario, creadoPorId)
 - AuditoriaLog (id, usuarioId, accion, entidad, entidadId, detalle, ip, creadoEn)
 - PlantillaContrato (id, titulo, descripcion, valorSugerido, empresaId, entregables JSON, creadoEn)
+
+## Cómo actualizar este archivo en cada sesión
+Al terminar cada sesión de trabajo con Claude, pedirle:
+"dame el commit de git y el CLAUDE.md actualizado"
+Claude generará:
+1. commit.sh — script listo para correr (git add . && git commit -m "..." && git push)
+2. CLAUDE.md — este archivo con la sesión añadida, roadmap actualizado y próximos pasos
+Copiar el CLAUDE.md nuevo al repo y correr commit.sh desde la raíz del proyecto.
