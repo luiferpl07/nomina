@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { usePlantillaActiva } from "@/hooks/usePlantillaActiva";
 
 interface Entregable {
   nombre: string;
@@ -22,6 +23,7 @@ export default function NuevoContratoForm({
   contratistas: any[];
 }) {
   const router = useRouter();
+  const plantilla = usePlantillaActiva();
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [tarifas, setTarifas] = useState<Tarifa[]>([]);
@@ -44,6 +46,28 @@ export default function NuevoContratoForm({
       .then((data) => setTarifas(data))
       .catch(() => {});
   }, []);
+
+  // Precargar desde plantilla si viene con ?plantilla=1
+  useEffect(() => {
+    if (!plantilla) return;
+    setForm((f) => ({
+      ...f,
+      titulo: plantilla.titulo,
+      descripcion: plantilla.descripcion ?? "",
+      valorTotal: plantilla.valorSugerido ? String(plantilla.valorSugerido) : "",
+    }));
+    const hoy = new Date();
+    setEntregables(
+      plantilla.entregables.map((e) => ({
+        nombre: e.nombre,
+        descripcion: e.descripcion ?? "",
+        valor: String(e.valor),
+        fechaLimite: new Date(hoy.getTime() + e.diasPlazo * 86400000)
+          .toISOString()
+          .slice(0, 10),
+      }))
+    );
+  }, [plantilla]);
 
   function calcularRetencionPreview(valor: number): number {
     if (!valor || tarifas.length === 0) return 0;
@@ -114,6 +138,17 @@ export default function NuevoContratoForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+
+      {/* Banner plantilla activa */}
+      {plantilla && (
+        <div className="flex items-center gap-2 bg-[#e6f5ed] text-[#1a7a4a] text-[12px] font-medium px-4 py-2.5 rounded-[8px]">
+          <svg width="13" height="13" fill="none" viewBox="0 0 13 13" stroke="currentColor" strokeWidth="2">
+            <path d="M2 7l3 3 6-6" />
+          </svg>
+          Formulario precargado desde la plantilla &ldquo;{plantilla.titulo}&rdquo;
+        </div>
+      )}
+
       {/* Datos generales */}
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">

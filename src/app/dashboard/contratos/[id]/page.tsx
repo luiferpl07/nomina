@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
 import Link from "next/link";
 import AccionesEntregable from "@/components/AccionesEntregable";
+import { BtnGuardarPlantilla } from "@/components/BtnGuardarPlantilla";
 
 const prisma = new PrismaClient();
 
@@ -110,6 +111,8 @@ export default async function DetalleContratoPage({
               {aprobados}/{contrato.entregables.length} · {progreso}%
             </span>
           </div>
+
+          <BtnGuardarPlantilla contratoId={contrato.id} tituloDefault={contrato.titulo} />
         </div>
 
         {/* Summary strip */}

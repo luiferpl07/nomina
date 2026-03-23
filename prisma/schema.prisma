@@ -35,6 +35,7 @@ model Empresa {
   contratos          Contrato[]
   configPenalizacion ConfigPenalizacion?
   tarifasRetencion   TarifaRetencion[]
+  plantillas  PlantillaContrato[]
 }
 
 model ConfigPenalizacion {
@@ -176,4 +177,17 @@ model AuditoriaLog {
   @@index([usuarioId])
   @@index([accion])
   @@index([creadoEn])
+}
+
+model PlantillaContrato {
+  id             String   @id @default(cuid())
+  titulo         String
+  descripcion    String?
+  valorSugerido  Int?
+  empresaId      String
+  empresa        Empresa  @relation(fields: [empresaId], references: [id])
+  entregables    Json     // [{nombre, descripcion, valor, diasPlazo}]
+  creadoEn       DateTime @default(now())
+
+  @@index([empresaId])
 }

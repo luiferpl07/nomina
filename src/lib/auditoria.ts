@@ -1,5 +1,6 @@
 // src/lib/auditoria.ts
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
 
 export type AccionAuditoria =
@@ -44,7 +45,7 @@ export async function registrarAuditoria({
         accion,
         entidad,
         entidadId,
-        detalle: detalle ?? {},
+        detalle: (detalle ?? {}) as Prisma.InputJsonValue,
         ip,
       },
     });

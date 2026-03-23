@@ -16,31 +16,46 @@ export default function Sidebar({ rol, nombre, empresaNombre, collapsed, onToggl
   const pathname = usePathname();
 
   const navAdmin = [
-    {
-      items: [
-        {
-          label: "Dashboard",
-          href: "/dashboard",
-          icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>,
-        },
-        {
-          label: "Contratos",
-          href: "/dashboard/contratos",
-          icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-        },
-        {
-          label: "Penalizaciones",
-          href: "/dashboard/penalizaciones",
-          icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-        },
-        {
-          label: "Actas PDF",
-          href: "/dashboard/actas",
-          icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M3 2h7l4 4v9H3V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M10 2v4h4" stroke="currentColor" strokeWidth="1.5"/><path d="M5 9l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-        },
-      ],
-    },
-  ];
+  {
+    items: [
+      {
+        label: "Dashboard",
+        href: "/dashboard",
+        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>,
+      },
+      {
+        label: "Contratos",
+        href: "/dashboard/contratos",
+        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+      },
+      {
+        label: "Plantillas",
+        href: "/dashboard/plantillas",
+        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 5h6M5 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M10 11l1.5 1.5L14 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      },
+      {
+        label: "Ranking",
+        href: "/dashboard/ranking",
+        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M2 12h2V8H2v4zM7 12h2V4H7v8zM12 12h2V6h-2v6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>,
+      },
+      {
+        label: "Penalizaciones",
+        href: "/dashboard/penalizaciones",
+        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+      },
+      {
+        label: "Actas PDF",
+        href: "/dashboard/actas",
+        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M3 2h7l4 4v9H3V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M10 2v4h4" stroke="currentColor" strokeWidth="1.5"/><path d="M5 9l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+      },
+      {
+        label: "Auditoría",
+        href: "/dashboard/auditoria",
+        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" strokeWidth="1.5"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+      },
+    ],
+  },
+];
 
   const navContratista = [
     {

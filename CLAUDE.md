@@ -79,6 +79,13 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - 2% por día de retraso, tope máximo 20%
 - +1% bono por día anticipado, tope máximo 10%
 
+## Notas técnicas importantes
+- Entregable NO tiene campo aprobadoEn — la fecha de aprobación se lee de Pago.fecha
+- Puntualidad en ranking: e.pago?.fecha <= e.fechaLimite
+- src/lib/prisma.ts exporta singleton de PrismaClient (patrón globalThis para dev)
+- src/lib/auditoria.ts → registrarAuditoria() — llamar desde toda API que mute datos
+- ModalRubrica es requerido antes de aprobar — no se puede aprobar sin calificar 1-5
+
 ---
 
 ## ROADMAP COMPLETO
@@ -130,20 +137,26 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
   - ✅ Campo iva en modelo Pago
   - ✅ Página UI con toggle por contratista → src/app/dashboard/iva/page.tsx
   - ✅ src/app/api/config/iva/route.ts
-- ⏳ Integración DIAN nómina electrónica (movida a fase futura)
 
 ### FASE 3 — Inteligencia y reportes 🔄 EN PROGRESO
 - ✅ Dashboard financiero con proyección de flujo de caja
   - ✅ Barras 30/60/90 días con entregables pendientes
   - ✅ Panel "Por vencer" con los 5 más cercanos y días restantes
-- ⏳ Ranking de desempeño de contratistas
-  - Puntualidad, calidad, rechazos
-  - Historial por contratista
-- ⏳ Rúbricas de evaluación al aprobar
-  - Calificar completitud, puntualidad, calidad (1-5)
-- ⏳ Log de auditoría inmutable
-  - Quién hizo qué, desde qué IP, a qué hora
-  - Exportable para auditorías legales
+- ✅ Ranking de desempeño de contratistas
+  - ✅ Tabla con score general, completitud, puntualidad, calidad, rechazos
+  - ✅ src/app/dashboard/ranking/page.tsx
+  - ✅ src/app/api/ranking/route.ts
+- ✅ Rúbricas de evaluación al aprobar
+  - ✅ Modal con estrellas (1-5) para completitud, puntualidad, calidad
+  - ✅ src/components/ModalRubrica.tsx
+  - ✅ Modelo Rubrica en schema — migración: fase3_rubrica_auditoria
+  - ✅ Integrado en src/app/api/entregables/[id]/aprobar/route.ts
+- ✅ Log de auditoría inmutable
+  - ✅ src/lib/auditoria.ts → registrarAuditoria()
+  - ✅ Modelo AuditoriaLog en schema
+  - ✅ src/app/dashboard/auditoria/page.tsx con filtros y exportación CSV
+  - ✅ src/app/api/auditoria/route.ts
+  - ✅ Integrado en aprobar y rechazar entregable
 - ⏳ Alertas predictivas
   - Detecta contratistas en riesgo de retraso
 - ⏳ Notificaciones por WhatsApp (Twilio/Meta API)
@@ -174,16 +187,17 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 Fase 3 — Inteligencia y reportes
 
 ## Próximo paso exacto
-1. Ranking de desempeño de contratistas
-2. Rúbricas de evaluación al aprobar entregable
-3. Log de auditoría inmutable
+1. Alertas predictivas de riesgo de retraso
+2. Notificaciones por WhatsApp (Twilio/Meta API)
 
 ## Última sesión
-21 Mar 2026 — Flujo de caja en dashboard.
-src/app/dashboard/page.tsx con proyección 30/60/90 días.
-Barras proporcionales al máximo valor. Panel "Por vencer"
-con badge rojo/ámbar/gris según urgencia (≤3d, ≤7d, resto).
-Sin cambios al schema.
+23 Mar 2026 — Fase 3 completa (parcial).
+- Rúbricas de evaluación al aprobar entregable (ModalRubrica + schema Rubrica)
+- Ranking de desempeño de contratistas (score, promedios, puntualidad)
+- Log de auditoría inmutable con filtros y exportación CSV
+- Correcciones: aprobadoEn no existe en Entregable → usar Pago.fecha
+- Correcciones: nombres reales de funciones en email.ts y penalizaciones.ts
+- Migración necesaria: npx prisma migrate dev --name fase3_rubrica_auditoria
 
 ## Tablas BD
 - Usuario (id, nombre, email, rol, empresaId, ivaResponsable)
@@ -195,3 +209,5 @@ Sin cambios al schema.
 - Pago (id, entregableId, valor, iva, retencion, valorNeto, estado, fecha)
 - ConfigPenalizacion (id, empresaId, porcentajePorDia, topeMaximo, bonoPorDia, topeBonoMaximo)
 - TarifaRetencion (id, empresaId, desde, hasta, porcentaje, orden)
+- Rubrica (id, entregableId, completitud, puntualidad, calidad, comentario, creadoPorId)
+- AuditoriaLog (id, usuarioId, accion, entidad, entidadId, detalle, ip, creadoEn)
