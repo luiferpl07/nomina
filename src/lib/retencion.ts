@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 // Tarifas DIAN 2025 para honorarios (por defecto si la empresa no tiene configuradas)
 export const TARIFAS_DIAN_DEFAULT = [

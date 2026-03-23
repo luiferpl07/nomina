@@ -74,6 +74,8 @@ model Usuario {
   contratos      Contrato[]  @relation("Contratista")
   evidencias     Evidencia[]
   actasFirmadas  Acta[]      @relation("Aprobador")
+  rubricas     Rubrica[]
+  auditoria    AuditoriaLog[]
 }
 
 model Contrato {
@@ -107,6 +109,7 @@ model Entregable {
   evidencias   Evidencia[]
   acta         Acta?
   pago         Pago?
+  rubrica      Rubrica?
 }
 
 model Evidencia {
@@ -144,4 +147,33 @@ model Pago {
   estado       EstadoPago @default(PENDIENTE)
   fecha        DateTime?
   createdAt    DateTime   @default(now())
+}
+
+model Rubrica {
+  id            String      @id @default(cuid())
+  entregableId  String      @unique
+  entregable    Entregable  @relation(fields: [entregableId], references: [id])
+  completitud   Int         // 1-5
+  puntualidad   Int         // 1-5
+  calidad       Int         // 1-5
+  comentario    String?
+  creadoPorId   String
+  creadoPor     Usuario     @relation(fields: [creadoPorId], references: [id])
+  creadoEn      DateTime    @default(now())
+}
+
+model AuditoriaLog {
+  id          String    @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id])
+  accion      String    // "APROBAR_ENTREGABLE" | "RECHAZAR_ENTREGABLE" | "CREAR_CONTRATO" | etc.
+  entidad     String    // "Entregable" | "Contrato" | "Usuario" | etc.
+  entidadId   String
+  detalle     Json?     // datos extra: valores anteriores, nuevos, etc.
+  ip          String?
+  creadoEn    DateTime  @default(now())
+
+  @@index([usuarioId])
+  @@index([accion])
+  @@index([creadoEn])
 }

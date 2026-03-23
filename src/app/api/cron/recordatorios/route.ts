@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { emailRecordatorio } from "@/lib/email";
 
-const prisma = new PrismaClient();
+import { emailRecordatorio } from "@/lib/email";
+import { prisma } from "@/lib/prisma";
 
 // Este endpoint lo llama Railway (o cualquier cron externo) una vez al día.
 // Busca entregables que vencen en los próximos DIAS_AVISO días y notifica.
