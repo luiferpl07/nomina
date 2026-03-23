@@ -13,7 +13,7 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - Base de datos: PostgreSQL + Prisma ORM
 - Autenticación: NextAuth.js (roles: ADMIN, APROBADOR, CONTRATISTA)
 - Archivos/PDFs: pdf-lib
-- Emails: Resend ✅ configurado en src/lib/email.ts
+- Emails: Resend configurado en src/lib/email.ts
 - Deploy: Railway (pendiente)
 - UI Components: shadcn/ui con Radix
 
@@ -26,14 +26,13 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - DATABASE_URL
 - NEXTAUTH_SECRET
 - NEXTAUTH_URL
-- RESEND_API_KEY → obtener en resend.com
+- RESEND_API_KEY
 - CRON_SECRET → string aleatorio para proteger el endpoint de cron
 
 ## Cómo configurar el cron en Railway
-1. Agregar CRON_SECRET al .env y en Railway dashboard
-2. En Railway: Settings → Cron Jobs → Add Cron Job
-   - Command: curl -H "Authorization: Bearer $CRON_SECRET" https://tu-dominio.com/api/cron/recordatorios
-   - Schedule: 0 8 * * * (todos los días a las 8am)
+- Settings → Cron Jobs → Add Cron Job
+- Command: curl -H "Authorization: Bearer $CRON_SECRET" https://tu-dominio.com/api/cron/recordatorios
+- Schedule: 0 8 * * *
 
 ## Notas de diseño UI (sistema visual activo)
 - Fondo general: bg-[#f0ede8]
@@ -51,8 +50,9 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - Labels: text-[11px] font-medium uppercase tracking-[0.08em] text-[#999891]
 - Barras de progreso: h-[3px], azul #2d5be3, verde #1a7a4a
 - Botón primario: bg-[#1a1916] text-white rounded-[8px] hover:opacity-85
-- Inputs: border border-black/[0.12] rounded-[8px] focus border-[#2d5be3] ring-2 ring-[#2d5be3]/10
+- Inputs: border border-black/[0.12] rounded-[8px] focus border-[#2d5be3] ring-2
 - Sin max-width en páginas internas — p-8 full width
+- Dashboard usa shadcn Card/Table/Badge/Button — no cambiar a clases custom
 
 ## Lógica de cálculo de pago al aprobar entregable
 1. valorConPenalizacion = valor - penalizacion + bono
@@ -130,14 +130,12 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
   - ✅ Campo iva en modelo Pago
   - ✅ Página UI con toggle por contratista → src/app/dashboard/iva/page.tsx
   - ✅ src/app/api/config/iva/route.ts
-- ⏳ Integración DIAN nómina electrónica (movida a fase futura — requiere certificado digital)
-  - Generación de XML según estándar DIAN
-  - Transmisión y acuse de recibo
-  - Gestión de rechazos
+- ⏳ Integración DIAN nómina electrónica (movida a fase futura)
 
-### FASE 3 — Inteligencia y reportes
-- ⏳ Dashboard financiero con proyección de flujo de caja
-  - Cuánto se pagará en 30/60/90 días
+### FASE 3 — Inteligencia y reportes 🔄 EN PROGRESO
+- ✅ Dashboard financiero con proyección de flujo de caja
+  - ✅ Barras 30/60/90 días con entregables pendientes
+  - ✅ Panel "Por vencer" con los 5 más cercanos y días restantes
 - ⏳ Ranking de desempeño de contratistas
   - Puntualidad, calidad, rechazos
   - Historial por contratista
@@ -176,20 +174,16 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 Fase 3 — Inteligencia y reportes
 
 ## Próximo paso exacto
-1. Dashboard financiero con proyección de flujo de caja (30/60/90 días)
-2. Ranking de desempeño de contratistas
+1. Ranking de desempeño de contratistas
+2. Rúbricas de evaluación al aprobar entregable
 3. Log de auditoría inmutable
 
 ## Última sesión
-21 Mar 2026 — Fase 2 completa.
-IVA en honorarios: campo ivaResponsable en Usuario, campo iva en Pago.
-Página UI src/app/dashboard/iva/page.tsx con toggle por contratista.
-src/app/api/config/iva/route.ts (GET lista, PATCH toggle).
-Página UI tarifas retención src/app/dashboard/retencion/page.tsx.
-src/app/api/config/retencion/route.ts (GET/POST).
-Route entregables actualizado con lógica IVA completa.
-email.ts con IVA en desglose del template aprobado.
-Schema: ivaResponsable en Usuario, iva en Pago.
+21 Mar 2026 — Flujo de caja en dashboard.
+src/app/dashboard/page.tsx con proyección 30/60/90 días.
+Barras proporcionales al máximo valor. Panel "Por vencer"
+con badge rojo/ámbar/gris según urgencia (≤3d, ≤7d, resto).
+Sin cambios al schema.
 
 ## Tablas BD
 - Usuario (id, nombre, email, rol, empresaId, ivaResponsable)
