@@ -85,6 +85,9 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 - src/lib/prisma.ts exporta singleton de PrismaClient (patrón globalThis para dev)
 - src/lib/auditoria.ts → registrarAuditoria() — llamar desde toda API que mute datos
 - ModalRubrica es requerido antes de aprobar — no se puede aprobar sin calificar 1-5
+- Prisma campos Json: castear siempre como Prisma.InputJsonValue
+- Plantillas usan sessionStorage para pasar datos al formulario vía ?plantilla=1
+- usePlantillaActiva() hook lee sessionStorage y limpia después de leer
 
 ---
 
@@ -138,7 +141,7 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
   - ✅ Página UI con toggle por contratista → src/app/dashboard/iva/page.tsx
   - ✅ src/app/api/config/iva/route.ts
 
-### FASE 3 — Inteligencia y reportes 🔄 EN PROGRESO
+### FASE 3 — Inteligencia y reportes ✅ COMPLETA
 - ✅ Dashboard financiero con proyección de flujo de caja
   - ✅ Barras 30/60/90 días con entregables pendientes
   - ✅ Panel "Por vencer" con los 5 más cercanos y días restantes
@@ -157,19 +160,30 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
   - ✅ src/app/dashboard/auditoria/page.tsx con filtros y exportación CSV
   - ✅ src/app/api/auditoria/route.ts
   - ✅ Integrado en aprobar y rechazar entregable
-- ⏳ Alertas predictivas
-  - Detecta contratistas en riesgo de retraso
-- ⏳ Notificaciones por WhatsApp (Twilio/Meta API)
+- ⏳ Alertas predictivas (movido a Fase 4)
+- ⏳ Notificaciones por WhatsApp (movido a Fase 4)
 
-### FASE 4 — Escala y multiempresa
+### FASE 4 — Escala y multiempresa 🔄 EN PROGRESO
+- ✅ Plantillas de contrato reutilizables
+  - ✅ Modelo PlantillaContrato en schema — migración: fase4_plantillas
+  - ✅ src/app/api/plantillas/route.ts (GET, POST)
+  - ✅ src/app/api/plantillas/[id]/route.ts (DELETE)
+  - ✅ src/app/api/contratos/[id]/guardar-plantilla/route.ts
+  - ✅ src/app/dashboard/plantillas/page.tsx
+  - ✅ src/components/PlantillasClient.tsx
+  - ✅ src/components/BtnGuardarPlantilla.tsx
+  - ✅ src/hooks/usePlantillaActiva.ts
+  - ✅ NuevoContratoForm precarga desde plantilla con banner verde
+  - ✅ Sidebar actualizado con Plantillas, Ranking y Auditoría
+- ⏳ Alertas predictivas
+  - Detecta contratistas en riesgo de retraso basado en historial
 - ⏳ Arquitectura multi-tenant
   - Una instalación, múltiples empresas con datos aislados
 - ⏳ Conciliación bancaria
   - Integración con PSE o Bancolombia API
-- ⏳ Plantillas de contrato reutilizables
-  - Clonar contratos con un clic
 - ⏳ API pública + webhooks
   - Integración con Siigo, World Office, SAP
+- ⏳ Notificaciones por WhatsApp (Twilio/Meta API)
 - ⏳ App móvil para contratistas (React Native)
   - Subir evidencia, ver pagos, firmar desde el celular
 - ⏳ Deploy en Railway con dominio propio
@@ -184,20 +198,22 @@ firma digital doble (contratista + aprobador) y evidencia adjunta.
 ---
 
 ## Módulo en progreso
-Fase 3 — Inteligencia y reportes
+Fase 4 — Escala y multiempresa
 
 ## Próximo paso exacto
 1. Alertas predictivas de riesgo de retraso
 2. Notificaciones por WhatsApp (Twilio/Meta API)
+3. Arquitectura multi-tenant
 
 ## Última sesión
-23 Mar 2026 — Fase 3 completa (parcial).
-- Rúbricas de evaluación al aprobar entregable (ModalRubrica + schema Rubrica)
-- Ranking de desempeño de contratistas (score, promedios, puntualidad)
-- Log de auditoría inmutable con filtros y exportación CSV
-- Correcciones: aprobadoEn no existe en Entregable → usar Pago.fecha
-- Correcciones: nombres reales de funciones en email.ts y penalizaciones.ts
-- Migración necesaria: npx prisma migrate dev --name fase3_rubrica_auditoria
+23 Mar 2026 — Plantillas de contrato reutilizables.
+- Modelo PlantillaContrato con entregables como JSON (diasPlazo en vez de fechas fijas)
+- API CRUD completa para plantillas
+- Botón "Guardar como plantilla" en detalle de contrato (BtnGuardarPlantilla)
+- Página /dashboard/plantillas con lista, expand/collapse y botón "Usar plantilla"
+- Hook usePlantillaActiva() lee sessionStorage y precarga NuevoContratoForm
+- Banner verde en formulario cuando viene de plantilla
+- Sidebar actualizado: Plantillas, Ranking, Auditoría
 
 ## Tablas BD
 - Usuario (id, nombre, email, rol, empresaId, ivaResponsable)
@@ -211,3 +227,4 @@ Fase 3 — Inteligencia y reportes
 - TarifaRetencion (id, empresaId, desde, hasta, porcentaje, orden)
 - Rubrica (id, entregableId, completitud, puntualidad, calidad, comentario, creadoPorId)
 - AuditoriaLog (id, usuarioId, accion, entidad, entidadId, detalle, ip, creadoEn)
+- PlantillaContrato (id, titulo, descripcion, valorSugerido, empresaId, entregables JSON, creadoEn)

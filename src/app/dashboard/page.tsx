@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { calcularAlertas } from "@/lib/alertas";
 
 const prisma = new PrismaClient();
 
@@ -44,13 +45,18 @@ export default async function DashboardPage() {
     (e) => e.estado === "EN_REVISION"
   ).length;
 
-  // ── Proyección de flujo de caja ───────────────────────────────────────────
+  // ── Alertas predictivas ──────────────────────────────────────────────────
+  const alertas = await calcularAlertas(session.user.empresaId);
+  const alertasCriticas = alertas.filter((a) => a.nivel === "CRITICO");
+  const alertasAltas = alertas.filter((a) => a.nivel === "ALTO");
+  const alertasMedias = alertas.filter((a) => a.nivel === "MEDIO");
+
+  // ── Proyección de flujo de caja ──────────────────────────────────────────
   const ahora = new Date();
   const en30 = new Date(ahora); en30.setDate(ahora.getDate() + 30);
   const en60 = new Date(ahora); en60.setDate(ahora.getDate() + 60);
   const en90 = new Date(ahora); en90.setDate(ahora.getDate() + 90);
 
-  // Entregables pendientes agrupados por ventana de fecha límite
   const pendientes = todosEntregables.filter(
     (e) => e.estado !== "APROBADO" && e.estado !== "RECHAZADO"
   );
@@ -68,8 +74,8 @@ export default async function DashboardPage() {
     .reduce((sum, e) => sum + e.valor, 0);
 
   const flujoTotal = flujo30 + flujo60 + flujo90;
+  const maxFlujo = Math.max(flujo30, flujo60, flujo90, 1);
 
-  // Próximos entregables por vencer (los 5 más cercanos)
   const proximosVencer = pendientes
     .filter((e) => e.fechaLimite >= ahora)
     .sort((a, b) => a.fechaLimite.getTime() - b.fechaLimite.getTime())
@@ -78,19 +84,40 @@ export default async function DashboardPage() {
       const contrato = contratos.find((c) =>
         c.entregables.some((ent) => ent.id === e.id)
       );
-      const diasRestantes = Math.ceil(
+      const dias = Math.ceil(
         (e.fechaLimite.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24)
       );
-      return { ...e, contratoTitulo: contrato?.titulo ?? "", diasRestantes };
+      return { ...e, contratoTitulo: contrato?.titulo ?? "", diasRestantes: dias };
     });
-
-  // Barra visual: ancho proporcional al flujo total
-  const maxFlujo = Math.max(flujo30, flujo60, flujo90, 1);
 
   const diasSemana = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
   const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
   const hoy = new Date();
   const fechaTexto = `${diasSemana[hoy.getDay()]}, ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+
+  const nivelConfig = {
+    CRITICO: {
+      bg: "bg-red-50",
+      border: "border-red-200",
+      badge: "bg-[#faeaea] text-[#a02020]",
+      dot: "bg-red-500",
+      label: "Crítico",
+    },
+    ALTO: {
+      bg: "bg-amber-50",
+      border: "border-amber-200",
+      badge: "bg-[#fef3dc] text-[#92600a]",
+      dot: "bg-amber-400",
+      label: "Alto",
+    },
+    MEDIO: {
+      bg: "bg-stone-50",
+      border: "border-stone-200",
+      badge: "bg-black/[0.05] text-[#6b6a64]",
+      dot: "bg-stone-400",
+      label: "Medio",
+    },
+  };
 
   return (
     <div className="p-8">
@@ -101,6 +128,107 @@ export default async function DashboardPage() {
         </h1>
         <p className="text-sm text-stone-400 mt-1 capitalize">{fechaTexto}</p>
       </div>
+
+      {/* ── Panel de alertas predictivas ─────────────────────────────────── */}
+      {alertas.length > 0 && (
+        <div className="mb-6">
+          {/* Header del panel */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-amber-500">
+                <path d="M8 2L14 13H2L8 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="M8 6v3M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span className="text-sm font-semibold text-stone-900">Alertas de riesgo</span>
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#faeaea] text-[#a02020]">
+                {alertas.length} {alertas.length === 1 ? "alerta" : "alertas"}
+              </span>
+            </div>
+            {(alertasCriticas.length > 0 || alertasAltas.length > 0) && (
+              <div className="flex items-center gap-2 text-[11px] text-stone-400">
+                {alertasCriticas.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"/>
+                    {alertasCriticas.length} crítica{alertasCriticas.length > 1 ? "s" : ""}
+                  </span>
+                )}
+                {alertasAltas.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"/>
+                    {alertasAltas.length} alta{alertasAltas.length > 1 ? "s" : ""}
+                  </span>
+                )}
+                {alertasMedias.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-stone-400 inline-block"/>
+                    {alertasMedias.length} media{alertasMedias.length > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Lista de alertas */}
+          <div className="space-y-2">
+            {alertas.slice(0, 8).map((alerta) => {
+              const cfg = nivelConfig[alerta.nivel];
+              return (
+                <Link
+                  key={`${alerta.entregableId}`}
+                  href={`/dashboard/contratos/${alerta.contratoId}`}
+                  className={`flex items-center gap-4 px-4 py-3 rounded-xl border ${cfg.bg} ${cfg.border} hover:opacity-90 transition-opacity`}
+                >
+                  {/* Dot nivel */}
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-stone-900 truncate">
+                        {alerta.entregableNombre}
+                      </span>
+                      <span className="text-[11px] text-stone-400 truncate">
+                        · {alerta.contratistaId ? alerta.contratistaNombre : ""} · {alerta.contratoTitulo}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-stone-500 mt-0.5">{alerta.motivo}</p>
+                  </div>
+
+                  {/* Badge nivel + días */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {alerta.porcentajeTarde > 0 && (
+                      <span className="text-[11px] text-stone-400">
+                        {alerta.porcentajeTarde}% tardías
+                      </span>
+                    )}
+                    <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${cfg.badge}`}>
+                      {cfg.label}
+                    </span>
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                      alerta.diasRestantes <= 1
+                        ? "bg-[#faeaea] text-[#a02020]"
+                        : alerta.diasRestantes <= 3
+                        ? "bg-[#fef3dc] text-[#92600a]"
+                        : "bg-black/[0.05] text-[#6b6a64]"
+                    }`}>
+                      {alerta.diasRestantes === 0
+                        ? "Hoy"
+                        : alerta.diasRestantes === 1
+                        ? "Mañana"
+                        : `${alerta.diasRestantes}d`}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+            {alertas.length > 8 && (
+              <p className="text-xs text-stone-400 text-center pt-1">
+                +{alertas.length - 8} alertas más
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Métricas */}
       <div className="grid grid-cols-4 gap-4 mb-6">
@@ -148,31 +276,43 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-stone-100 hover:shadow-md transition-shadow">
+        <Card className={`shadow-sm border-stone-100 hover:shadow-md transition-shadow ${alertasCriticas.length > 0 ? "border-red-200" : ""}`}>
           <CardHeader className="pb-1 pt-5 px-6">
             <CardTitle className="text-xs font-medium text-stone-400 uppercase tracking-wide">
-              Total pagado
+              {alertasCriticas.length > 0 ? "⚠ Alertas críticas" : "Total pagado"}
             </CardTitle>
           </CardHeader>
           <CardContent className="px-6 pb-5">
-            <div className="flex items-center gap-2 mt-1 mb-1">
-              <p className="text-4xl font-semibold text-green-600">
-                ${totalPagado.toLocaleString()}
-              </p>
-            </div>
-            <Badge
-              variant="outline"
-              className="text-green-600 border-green-200 bg-green-50 text-xs"
-            >
-              liberado este mes
-            </Badge>
+            {alertasCriticas.length > 0 ? (
+              <>
+                <p className="text-4xl font-semibold text-red-500 mt-1">
+                  {alertasCriticas.length}
+                </p>
+                <p className="text-xs text-stone-400 mt-2">
+                  {alertasCriticas.length === 1 ? "entregable en riesgo crítico" : "entregables en riesgo crítico"}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mt-1 mb-1">
+                  <p className="text-4xl font-semibold text-green-600">
+                    ${totalPagado.toLocaleString()}
+                  </p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className="text-green-600 border-green-200 bg-green-50 text-xs"
+                >
+                  liberado este mes
+                </Badge>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* ── Proyección de flujo de caja ──────────────────────────────────── */}
       <div className="grid grid-cols-[1fr_320px] gap-4 mb-6">
-        {/* Barras de proyección */}
         <Card className="shadow-none border-stone-100">
           <CardHeader className="py-4 px-6 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold text-stone-900">
@@ -326,6 +466,12 @@ export default async function DashboardPage() {
                   .filter((e) => e.estado === "APROBADO")
                   .reduce((sum, e) => sum + (e.pago?.valor ?? e.valor), 0);
 
+                // ¿Tiene alertas este contrato?
+                const tieneAlerta = alertas.some((a) => a.contratoId === c.id);
+                const nivelContrato = tieneAlerta
+                  ? alertas.find((a) => a.contratoId === c.id)?.nivel
+                  : null;
+
                 return (
                   <TableRow
                     key={c.id}
@@ -333,7 +479,15 @@ export default async function DashboardPage() {
                   >
                     <TableCell>
                       <Link href={`/dashboard/contratos/${c.id}`} className="block">
-                        <p className="text-sm font-medium text-stone-900">{c.titulo}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-stone-900">{c.titulo}</p>
+                          {nivelContrato === "CRITICO" && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" title="Alerta crítica"/>
+                          )}
+                          {nivelContrato === "ALTO" && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" title="Alerta alta"/>
+                          )}
+                        </div>
                         {enRevisionC > 0 && (
                           <Badge
                             variant="outline"

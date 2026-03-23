@@ -163,3 +163,49 @@ export async function emailRecordatorio({ contratistaEmail, contratistaNombre, e
     `)),
   });
 }
+
+export async function emailAlertasCriticas({ adminEmail, adminNombre, alertas, url }: {
+  adminEmail: string;
+  adminNombre: string;
+  alertas: Array<{
+    contratistaNombre: string;
+    entregableNombre: string;
+    contratoTitulo: string;
+    diasRestantes: number;
+    porcentajeTarde: number;
+    motivo: string;
+  }>;
+  url: string;
+}) {
+  const filas = alertas
+    .map(
+      (a) => `
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.05);">
+          <p style="margin:0;font-size:13px;font-weight:500;color:#1a1916;">${a.entregableNombre}</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#999891;">${a.contratoTitulo} · ${a.contratistaNombre}</p>
+        </td>
+        <td style="padding:8px 0 8px 16px;border-bottom:1px solid rgba(0,0,0,0.05);text-align:right;vertical-align:top;white-space:nowrap;">
+          <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;background:#faeaea;color:#a02020;">
+            ${a.diasRestantes === 0 ? "Hoy" : a.diasRestantes === 1 ? "Mañana" : `${a.diasRestantes}d`}
+          </span>
+        </td>
+      </tr>`
+    )
+    .join("");
+ 
+  return resend.emails.send({
+    from: FROM,
+    to: adminEmail,
+    subject: `⚠ ${alertas.length} alerta${alertas.length > 1 ? "s" : ""} crítica${alertas.length > 1 ? "s" : ""} — NóminaFlow`,
+    html: baseLayout(s(`
+      ${h1("Alertas críticas de entregables")}
+      ${par(`Hola ${adminNombre}, tienes <strong>${alertas.length} entregable${alertas.length > 1 ? "s" : ""}</strong> en riesgo crítico que vence${alertas.length === 1 ? "" : "n"} hoy o mañana y requieren atención inmediata.`)}
+      ${hr()}
+      <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:20px;">
+        ${filas}
+      </table>
+      ${btn("Ver dashboard", url)}
+    `)),
+  });
+}

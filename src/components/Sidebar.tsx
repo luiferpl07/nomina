@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 interface Props {
   rol: string;
@@ -14,48 +15,106 @@ interface Props {
 
 export default function Sidebar({ rol, nombre, empresaNombre, collapsed, onToggle }: Props) {
   const pathname = usePathname();
+  const [numAlertas, setNumAlertas] = useState(0);
+
+  // Cargar conteo de alertas para el badge (solo admin/aprobador)
+  useEffect(() => {
+    if (rol === "CONTRATISTA") return;
+    fetch("/api/alertas")
+      .then((r) => r.json())
+      .then((data: unknown[]) => {
+        if (Array.isArray(data)) setNumAlertas(data.length);
+      })
+      .catch(() => {});
+  }, [rol]);
 
   const navAdmin = [
-  {
-    items: [
-      {
-        label: "Dashboard",
-        href: "/dashboard",
-        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg>,
-      },
-      {
-        label: "Contratos",
-        href: "/dashboard/contratos",
-        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-      },
-      {
-        label: "Plantillas",
-        href: "/dashboard/plantillas",
-        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M5 5h6M5 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M10 11l1.5 1.5L14 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-      },
-      {
-        label: "Ranking",
-        href: "/dashboard/ranking",
-        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M2 12h2V8H2v4zM7 12h2V4H7v8zM12 12h2V6h-2v6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>,
-      },
-      {
-        label: "Penalizaciones",
-        href: "/dashboard/penalizaciones",
-        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-      },
-      {
-        label: "Actas PDF",
-        href: "/dashboard/actas",
-        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M3 2h7l4 4v9H3V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M10 2v4h4" stroke="currentColor" strokeWidth="1.5"/><path d="M5 9l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-      },
-      {
-        label: "Auditoría",
-        href: "/dashboard/auditoria",
-        icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" strokeWidth="1.5"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-      },
-    ],
-  },
-];
+    {
+      items: [
+        {
+          label: "Dashboard",
+          href: "/dashboard",
+          badge: numAlertas > 0 ? numAlertas : null,
+          badgeColor: "bg-red-500",
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+              <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+              <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+              <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
+          ),
+        },
+        {
+          label: "Contratos",
+          href: "/dashboard/contratos",
+          badge: null,
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          ),
+        },
+        {
+          label: "Plantillas",
+          href: "/dashboard/plantillas",
+          badge: null,
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M5 5h6M5 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M10 11l1.5 1.5L14 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ),
+        },
+        {
+          label: "Ranking",
+          href: "/dashboard/ranking",
+          badge: null,
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path d="M2 12h2V8H2v4zM7 12h2V4H7v8zM12 12h2V6h-2v6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+            </svg>
+          ),
+        },
+        {
+          label: "Penalizaciones",
+          href: "/dashboard/penalizaciones",
+          badge: null,
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          ),
+        },
+        {
+          label: "Actas PDF",
+          href: "/dashboard/actas",
+          badge: null,
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path d="M3 2h7l4 4v9H3V2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+              <path d="M10 2v4h4" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M5 9l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          ),
+        },
+        {
+          label: "Auditoría",
+          href: "/dashboard/auditoria",
+          badge: null,
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M8 5v4l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          ),
+        },
+      ],
+    },
+  ];
 
   const navContratista = [
     {
@@ -63,7 +122,13 @@ export default function Sidebar({ rol, nombre, empresaNombre, collapsed, onToggl
         {
           label: "Mis contratos",
           href: "/portal",
-          icon: <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+          badge: null,
+          icon: (
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          ),
         },
       ],
     },
@@ -85,33 +150,33 @@ export default function Sidebar({ rol, nombre, empresaNombre, collapsed, onToggl
       className="bg-white rounded-2xl flex flex-col overflow-hidden transition-all duration-200 flex-shrink-0"
     >
       {/* Header */}
-        <div className={`flex flex-col border-b border-stone-100 ${collapsed ? "items-center py-4 gap-3" : "flex-row items-center h-16 px-4 justify-between"}`}>
+      <div className={`flex flex-col border-b border-stone-100 ${collapsed ? "items-center py-4 gap-3" : "flex-row items-center h-16 px-4 justify-between"}`}>
         <div className={`flex items-center gap-3 min-w-0 ${collapsed ? "" : "flex-1"}`}>
-            <div className="w-9 h-9 rounded-full bg-stone-900 flex items-center justify-center flex-shrink-0">
+          <div className="w-9 h-9 rounded-full bg-stone-900 flex items-center justify-center flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8h10M8 3v10" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M3 8h10M8 3v10" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             </svg>
-            </div>
-            {!collapsed && (
+          </div>
+          {!collapsed && (
             <div className="min-w-0">
-                <p className="text-sm font-semibold text-stone-900 truncate leading-tight">NóminaFlow</p>
-                {empresaNombre && (
+              <p className="text-sm font-semibold text-stone-900 truncate leading-tight">NóminaFlow</p>
+              {empresaNombre && (
                 <p className="text-xs text-stone-400 truncate leading-tight">{empresaNombre}</p>
-                )}
+              )}
             </div>
-            )}
+          )}
         </div>
 
         <button
-            onClick={onToggle}
-            className="p-1.5 rounded-md text-stone-300 hover:text-stone-600 hover:bg-stone-50 transition-colors flex-shrink-0"
+          onClick={onToggle}
+          className="p-1.5 rounded-md text-stone-300 hover:text-stone-600 hover:bg-stone-50 transition-colors flex-shrink-0"
         >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <rect x="1" y="1" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="1.3"/>
             <path d="M6 1v16" stroke="currentColor" strokeWidth="1.3"/>
-            </svg>
+          </svg>
         </button>
-        </div>
+      </div>
 
       {/* Nav */}
       <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden">
@@ -124,7 +189,7 @@ export default function Sidebar({ rol, nombre, empresaNombre, collapsed, onToggl
                   key={item.href}
                   href={item.href}
                   title={collapsed ? item.label : undefined}
-                  className={`flex items-center gap-3 py-2.5 text-sm mb-0.5 rounded-lg transition-colors ${
+                  className={`relative flex items-center gap-3 py-2.5 text-sm mb-0.5 rounded-lg transition-colors ${
                     collapsed ? "justify-center px-2" : "px-3"
                   } ${
                     activo
@@ -132,10 +197,24 @@ export default function Sidebar({ rol, nombre, empresaNombre, collapsed, onToggl
                       : "text-stone-400 hover:text-stone-700 hover:bg-stone-50"
                   }`}
                 >
-                  <span className={`flex-shrink-0 ${activo ? "text-stone-900" : "text-stone-400"}`}>
+                  <span className={`flex-shrink-0 relative ${activo ? "text-stone-900" : "text-stone-400"}`}>
                     {item.icon}
+                    {/* Badge en icono cuando está collapsed */}
+                    {collapsed && item.badge && item.badge > 0 && (
+                      <span className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full ${item.badgeColor} flex items-center justify-center`}>
+                        <span className="text-[8px] font-bold text-white leading-none">
+                          {item.badge > 9 ? "9+" : item.badge}
+                        </span>
+                      </span>
+                    )}
                   </span>
-                  {!collapsed && <span>{item.label}</span>}
+                  {!collapsed && <span className="flex-1">{item.label}</span>}
+                  {/* Badge inline cuando está expandido */}
+                  {!collapsed && item.badge && item.badge > 0 && (
+                    <span className={`text-[10px] font-bold text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${item.badgeColor}`}>
+                      {item.badge > 99 ? "99+" : item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
